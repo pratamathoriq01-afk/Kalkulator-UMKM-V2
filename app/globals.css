@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* ─── Google Fonts via next/font are loaded in layout.tsx ─── */
+
+/* ─── CSS Variables ─── */
+:root {
+  --color-bg: #f8f9ff;
+  --color-surface: #ffffff;
+  --color-primary: #4A3427;
+  --color-primary-light: #8C7259;
+  --color-text: #241710;
+  --color-text-muted: #6B5541;
+  --color-border: #D4C8B5;
+  --color-sand: #F0E6D2;
+  --color-sand-light: #F7F3E9;
+  --font-sans: var(--font-inter, system-ui, sans-serif);
+  --font-mono: var(--font-jetbrains-mono, 'Courier New', monospace);
+}
+
+/* ─── Base Styles ─── */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F0E6D2;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: #8C7259;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4A3427;
+}
+
+/* ─── Touch Bar (Tab Navigation) ─── */
+.touch-bar-container {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #8C7259 #F0E6D2;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out;
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.2s ease-out;
+}
+
+/* ─── Number Input Arrow Hide ─── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ─── Focus Ring ─── */
+:focus-visible {
+  outline: 2px solid #4A3427;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: #D4C8B5;
+  color: #241710;
+}
