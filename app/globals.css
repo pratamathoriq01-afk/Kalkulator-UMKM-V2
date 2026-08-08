@@ -1,94 +1,193 @@
 @import "tailwindcss";
 
-/* ─── Google Fonts via next/font are loaded in layout.tsx ─── */
+/* ─── GOOGLE FONTS ─── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap');
 
-/* ─── CSS Variables ─── */
+/* ─── SYSTEM CSS VARIABLES ─── */
 :root {
-  --color-bg: #f8f9ff;
-  --color-surface: #ffffff;
-  --color-primary: #4A3427;
-  --color-primary-light: #8C7259;
-  --color-text: #241710;
-  --color-text-muted: #6B5541;
-  --color-border: #D4C8B5;
-  --color-sand: #F0E6D2;
-  --color-sand-light: #F7F3E9;
-  --font-sans: var(--font-inter, system-ui, sans-serif);
-  --font-mono: var(--font-jetbrains-mono, 'Courier New', monospace);
+  --bg-sandcastle: #f7f3e9;     /* Warm Creamy Sandcastle (Global Body Canvas) */
+  --surface-card: #ffffff;      /* Pure Soft White Card Surface */
+  --surface-subtle: #efe9dc;    /* Sandcastle Banner & Secondary Surface */
+  --border-taupe: #d4c8b5;      /* Soft Taupe Border */
+  --color-sable-brown: #4a3427; /* Rich Sable Brown */
+  --color-light-brown: #8c7259; /* Warm Light Brown Accent */
+  --color-deep-sable: #241710;  /* High Contrast Deep Sable Text */
 }
 
-/* ─── Base Styles ─── */
-* {
-  box-sizing: border-box;
-  padding: 0;
+/* ─── BASE OVERRIDES ─── */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  background-color: var(--bg-sandcastle) !important;
+  color: var(--color-deep-sable) !important;
   margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-weight: 600;
+  letter-spacing: -0.014em;
 }
 
-html, body {
-  font-family: var(--font-sans);
-  background: var(--color-bg);
-  color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
+h1, h2, h3, h4, .font-heading {
+  font-family: 'Inter', sans-serif !important;
+  letter-spacing: -0.025em;
+  color: var(--color-deep-sable);
+  font-weight: 800;
 }
 
-.font-mono {
-  font-family: var(--font-mono) !important;
+.font-mono, .data-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+  letter-spacing: -0.03em;
 }
 
-/* ─── Scrollbar ─── */
+/* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F0E6D2;
-  border-radius: 3px;
+  background: #f7f3e9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #8C7259;
-  border-radius: 3px;
+  background: #bdb6a3;
+  border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4A3427;
+  background: #4a3427;
 }
 
-/* ─── Touch Bar (Tab Navigation) ─── */
-.touch-bar-container {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-  scrollbar-width: thin;
-  scrollbar-color: #8C7259 #F0E6D2;
-}
-
-/* ─── Animations ─── */
+/* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-
-@keyframes slideLeft {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 .animate-fade-in {
-  animation: fadeIn 0.25s ease-out;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-slide-left {
-  animation: slideLeft 0.2s ease-out;
+/* Sable Brown Primary Button - 100% PURE WHITE TEXT */
+.btn-primary-brown {
+  background: #4a3427 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border: 1px solid #241710 !important;
+  box-shadow: 0 2px 6px rgba(36, 23, 16, 0.18);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-primary-brown:hover {
+  background: #241710 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(36, 23, 16, 0.28);
 }
 
-/* ─── Number Input Arrow Hide ─── */
+/* Light Brown / Taupe Secondary Button - 100% PURE WHITE TEXT */
+.btn-secondary-taupe {
+  background: #8c7259 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border: 1px solid #6b5541 !important;
+  box-shadow: 0 2px 6px rgba(140, 114, 89, 0.18);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-secondary-taupe:hover {
+  background: #6b5541 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 85, 65, 0.28);
+}
+
+/* Touch Bar Navigation Container & Pill Buttons */
+.touch-bar-container {
+  background: #efe9dc;
+  border: 1px solid #d4c8b5;
+  border-radius: 1.25rem;
+  padding: 0.35rem;
+  padding-bottom: 0.6rem;
+  box-shadow: 0 1px 3px rgba(36, 23, 16, 0.04);
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  width: 100%;
+  align-items: center;
+}
+
+.touch-bar-container::-webkit-scrollbar {
+  height: 4px;
+}
+.touch-bar-container::-webkit-scrollbar-track {
+  background: #f7f3e9;
+  border-radius: 99px;
+  margin: 0 0.5rem;
+}
+.touch-bar-container::-webkit-scrollbar-thumb {
+  background: #bdb6a3;
+  border-radius: 99px;
+}
+.touch-bar-container::-webkit-scrollbar-thumb:hover {
+  background: #4a3427;
+}
+
+.touch-bar-pill {
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: 1px solid #d4c8b5;
+  background: #f7f3e9;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #241710 !important;
+}
+.touch-bar-pill:hover {
+  background: #d4c8b5;
+  color: #241710 !important;
+  border-color: #bdb6a3;
+  transform: translateY(-1px);
+}
+.touch-bar-pill.active {
+  background: #4a3427;
+  color: #ffffff !important;
+  border-color: #241710;
+  box-shadow: 0px 2px 8px rgba(74, 52, 39, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Form Input Enhancements */
+input[type="text"], input[type="number"], select {
+  font-family: 'Inter', sans-serif;
+  color: #241710 !important;
+  font-weight: 700;
+  background-color: #ffffff;
+  border-color: #d4c8b5;
+  transition: all 0.15s ease;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus {
+  background-color: #ffffff;
+  border-color: #4a3427 !important;
+  box-shadow: 0 0 0 3px rgba(74, 52, 39, 0.12) !important;
+}
+
+/* Card Hover Elevation */
+.hover-card-elevate {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-card-elevate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(36, 23, 16, 0.06);
+}
+
+/* Remove default number input spin buttons */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -96,17 +195,4 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
-}
-
-/* ─── Focus Ring ─── */
-:focus-visible {
-  outline: 2px solid #4A3427;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* ─── Selection ─── */
-::selection {
-  background: #D4C8B5;
-  color: #241710;
 }

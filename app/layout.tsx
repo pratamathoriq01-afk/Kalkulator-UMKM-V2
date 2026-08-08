@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 
 const inter = Inter({
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="bg-[#f8f9ff] text-[#0d1c2e] min-h-screen antialiased font-sans">
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
