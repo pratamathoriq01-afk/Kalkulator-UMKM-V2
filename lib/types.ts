@@ -29,14 +29,19 @@ export interface Packaging {
   hppPerPortion?: number;
 }
 
+export type PricingMode = 'food_cost' | 'gross_margin' | 'markup';
+
 export interface Product {
   id: number;
-  dbId?: number; // database ID (nullable for new/local products)
+  dbId?: number;
   name: string;
   mainMaterials: MainMaterial[];
   bopMaterials: BopMaterial[];
   packagings: Packaging[];
-  marginPercent: number;
+  pricingMode?: PricingMode;
+  targetFoodCostPercent?: number;
+  targetMarginPercent?: number;
+  marginPercent: number; // legacy markup % or fallback
   customOfflinePrice: number | null;
   offlinePromoEnabled?: boolean;
   offlineDiscountMode?: 'percent' | 'nominal';
@@ -74,12 +79,16 @@ export interface MarginStatus {
 }
 
 export interface OfflineData {
+  pricingMode: PricingMode;
+  targetFoodCostPercent: number;
+  targetMarginPercent: number;
   marginPercent: number;
   recommendedPriceRaw: number;
   recommendedPrice: number;
   effectiveOfflinePrice: number;
   netOfflineMargin: number;
-  marginRatio: number;
+  marginRatio: number; // Gross Margin % on sales
+  foodCostRatio: number; // Food Cost % on sales
   marginStatus: MarginStatus;
 }
 
@@ -90,6 +99,7 @@ export interface OfflinePromoData {
   discountNominal: number;
   priceAfterDiscount: number;
   netMarginAfterDiscount: number;
+  marginRatioAfterDiscount: number;
   isLosing: boolean;
 }
 
@@ -99,6 +109,8 @@ export interface OnlineData {
   fixedFee: number;
   recommendedOnlineRaw: number;
   recommendedOnline: number;
+  naiveOnlinePrice: number;
+  naivePayoutLoss: number;
   effectiveOnlinePrice: number;
   commissionAmount: number;
   simulatedPayout: number;
@@ -123,6 +135,8 @@ export interface PromoData {
   totalHPPOrder: number;
   netProfit: number;
   isBoncos: boolean;
+  recommendedCampaignPrice: number;
+  recommendedCampaignSubtotal: number;
 }
 
 export interface AIAnalysisResult {
@@ -134,7 +148,6 @@ export interface AIAnalysisResult {
   actionItems: string[];
 }
 
-// DB row type
 export interface ProductRow {
   id: number;
   user_session: string;

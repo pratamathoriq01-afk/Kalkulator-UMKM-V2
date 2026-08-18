@@ -1,5 +1,5 @@
 import type {
-  Product, HPPData, OfflineData, OfflinePromoData, OnlineData, PromoData, MarginStatus
+  Product, HPPData, OfflineData, OfflinePromoData, OnlineData, PromoData, MarginStatus, PricingMode
 } from './types';
 import { MARGIN_STATUS } from './config';
 
@@ -15,7 +15,7 @@ export function formatDecimalIDR(val: number | undefined | null): string {
   return 'Rp ' + formatted;
 }
 
-/* Modul 1: Biaya Produksi & HPP Murni per Porsi */
+/* Modul 1: Biaya Produksi & HPP Murni per Porsi (SAK EMKM 3 Pilar) */
 export function calculateHPP(prod: Product): HPPData {
   let totalMainMaterials = 0;
   const mainList = (prod.mainMaterials || []).map(item => {
@@ -55,24 +55,50 @@ export function calculateHPP(prod: Product): HPPData {
   return { mainList, bopList, packList, totalMainMaterials, totalBopMaterials, totalPackagings, hppMurni, mainPct, bopPct, packPct };
 }
 
-/* Modul 2: Harga Jual Toko (Offline) */
+/* Modul 2: Harga Jual Toko (Offline) & Fleksibilitas Margin */
 export function calculateOfflinePrice(hppMurni: number, prod: Product): OfflineData {
-  const marginPercent = parseFloat(String(prod.marginPercent)) || 0;
-  const recommendedPriceRaw = hppMurni + (hppMurni * (marginPercent / 100));
-  const recommendedPrice = Math.ceil(recommendedPriceRaw / 100) * 100;
+  const pricingMode: PricingMode = prod.pricingMode || 'food_cost';
+  const targetFoodCostPercent = Math.min(99, Math.max(1, parseFloat(String(prod.targetFoodCostPercent ?? 35)) || 35));
+  const targetMarginPercent = Math.min(99, Math.max(1, parseFloat(String(prod.targetMarginPercent ?? 65)) || 65));
+  const marginPercent = parseFloat(String(prod.marginPercent)) || 50;
 
+  let recommendedPriceRaw = 0;
+  if (hppMurni > 0) {
+    if (pricingMode === 'food_cost') {
+      recommendedPriceRaw = hppMurni / (targetFoodCostPercent / 100);
+    } else if (pricingMode === 'gross_margin') {
+      recommendedPriceRaw = hppMurni / (1 - (targetMarginPercent / 100));
+    } else {
+      recommendedPriceRaw = hppMurni + (hppMurni * (marginPercent / 100));
+    }
+  }
+
+  const recommendedPrice = Math.ceil(recommendedPriceRaw / 100) * 100;
   const effectiveOfflinePrice = prod.customOfflinePrice && prod.customOfflinePrice > 0
     ? parseFloat(String(prod.customOfflinePrice))
     : recommendedPrice;
 
   const netOfflineMargin = effectiveOfflinePrice - hppMurni;
-  const marginRatio = effectiveOfflinePrice > 0 ? (netOfflineMargin / effectiveOfflinePrice) * 100 : 0;
+  const marginRatio = effectiveOfflinePrice > 0 ? (netOfflineMargin / effectiveOfflinePrice) * 100 : 0; // Gross Margin % on Sales
+  const foodCostRatio = effectiveOfflinePrice > 0 ? (hppMurni / effectiveOfflinePrice) * 100 : 0; // Food Cost % on Sales
 
   let marginStatus: MarginStatus = MARGIN_STATUS.CRITICAL;
   if (marginRatio >= MARGIN_STATUS.HEALTHY.min) marginStatus = MARGIN_STATUS.HEALTHY;
   else if (marginRatio >= MARGIN_STATUS.MODERATE.min) marginStatus = MARGIN_STATUS.MODERATE;
 
-  return { marginPercent, recommendedPriceRaw, recommendedPrice, effectiveOfflinePrice, netOfflineMargin, marginRatio, marginStatus };
+  return {
+    pricingMode,
+    targetFoodCostPercent,
+    targetMarginPercent,
+    marginPercent,
+    recommendedPriceRaw,
+    recommendedPrice,
+    effectiveOfflinePrice,
+    netOfflineMargin,
+    marginRatio,
+    foodCostRatio,
+    marginStatus
+  };
 }
 
 /* Modul 2B: Simulasi Promo Toko (Offline) */
@@ -95,9 +121,19 @@ export function calculateOfflinePromo(basePrice: number, hppMurni: number, prod:
 
   const priceAfterDiscount = Math.max(0, basePrice - discountNominal);
   const netMarginAfterDiscount = priceAfterDiscount - hppMurni;
+  const marginRatioAfterDiscount = priceAfterDiscount > 0 ? (netMarginAfterDiscount / priceAfterDiscount) * 100 : 0;
   const isLosing = isOfflinePromoActive && (netMarginAfterDiscount < 0);
 
-  return { isOfflinePromoActive, mode, discountPercent, discountNominal, priceAfterDiscount, netMarginAfterDiscount, isLosing };
+  return {
+    isOfflinePromoActive,
+    mode,
+    discountPercent,
+    discountNominal,
+    priceAfterDiscount,
+    netMarginAfterDiscount,
+    marginRatioAfterDiscount,
+    isLosing
+  };
 }
 
 /* Modul 3: Harga Aplikasi Online (Reverse-Margin) */
@@ -112,6 +148,10 @@ export function calculateOnlinePrice(offlinePrice: number, prod: Product): Onlin
   }
   const recommendedOnline = Math.ceil(recommendedOnlineRaw / 500) * 500;
 
+  const naiveOnlinePrice = (offlinePrice * (1 + commFrac)) + fixedFee;
+  const naiveNetPayout = naiveOnlinePrice - (naiveOnlinePrice * commFrac) - fixedFee;
+  const naivePayoutLoss = Math.max(0, offlinePrice - naiveNetPayout);
+
   const effectiveOnlinePrice = prod.customOnlinePrice && prod.customOnlinePrice > 0
     ? parseFloat(String(prod.customOnlinePrice))
     : recommendedOnline;
@@ -119,11 +159,22 @@ export function calculateOnlinePrice(offlinePrice: number, prod: Product): Onlin
   const commissionAmount = effectiveOnlinePrice * commFrac;
   const simulatedPayout = effectiveOnlinePrice - commissionAmount - fixedFee;
 
-  return { commPercent, commFrac, fixedFee, recommendedOnlineRaw, recommendedOnline, effectiveOnlinePrice, commissionAmount, simulatedPayout };
+  return {
+    commPercent,
+    commFrac,
+    fixedFee,
+    recommendedOnlineRaw,
+    recommendedOnline,
+    naiveOnlinePrice,
+    naivePayoutLoss,
+    effectiveOnlinePrice,
+    commissionAmount,
+    simulatedPayout
+  };
 }
 
-/* Modul 4: Pusat Simulasi Diskon & Promo Online */
-export function calculatePromoSim(hppMurni: number, onlinePrice: number, prod: Product): PromoData {
+/* Modul 4: Pusat Simulasi Diskon & Proteksi Promo Online */
+export function calculatePromoSim(hppMurni: number, onlinePrice: number, offlinePrice: number, prod: Product): PromoData {
   const orderQty = Math.max(1, parseInt(String(prod.simOrderQty), 10) || 1);
   const orderSubtotal = orderQty * onlinePrice;
   const minOrder = parseFloat(String(prod.promoMinOrder)) || 0;
@@ -141,6 +192,7 @@ export function calculatePromoSim(hppMurni: number, onlinePrice: number, prod: P
   const commPercent = parseFloat(String(prod.commissionPercent)) || 0;
   const commFrac = commPercent / 100;
   const fixedFee = parseFloat(String(prod.fixedFee)) || 0;
+
   const commissionBase = deductionMode === 'after_discount' ? customerPays : orderSubtotal;
   const appCommissionTotal = (commissionBase * commFrac) + fixedFee;
   const netPayout = Math.max(0, customerPays - appCommissionTotal);
@@ -148,9 +200,56 @@ export function calculatePromoSim(hppMurni: number, onlinePrice: number, prod: P
   const netProfit = netPayout - totalHPPOrder;
   const isBoncos = netProfit < 0;
 
+  /* Auto-Markup Campaign Recommended Price Calculation */
+  const targetPayout = orderQty * (offlinePrice > 0 ? offlinePrice : hppMurni * 1.5);
+  let subtotalReq = 0;
+
+  if (deductionMode === 'after_discount') {
+    const custPayReq = (targetPayout + fixedFee) / Math.max(0.01, 1 - commFrac);
+    if (maxDiscountCap > 0) {
+      subtotalReq = custPayReq + maxDiscountCap;
+    } else {
+      const discFrac = promoPercent / 100;
+      subtotalReq = custPayReq / Math.max(0.01, 1 - discFrac);
+    }
+  } else {
+    // before_discount
+    if (maxDiscountCap > 0) {
+      subtotalReq = (targetPayout + fixedFee + maxDiscountCap) / Math.max(0.01, 1 - commFrac);
+    } else {
+      const discFrac = promoPercent / 100;
+      const denom = 1 - commFrac - discFrac;
+      if (denom > 0) {
+        subtotalReq = (targetPayout + fixedFee) / denom;
+      } else {
+        subtotalReq = targetPayout * 2.5;
+      }
+    }
+  }
+
+  const recommendedCampaignSubtotal = Math.ceil(subtotalReq / 500) * 500;
+  const recommendedCampaignPrice = Math.ceil((recommendedCampaignSubtotal / orderQty) / 500) * 500;
+
   return {
-    isPromoActive, orderQty, orderSubtotal, minOrder, promoPercent, maxDiscountCap,
-    isMinOrderMet, rawDiscount, isDiscountCapped, effectiveDiscount, customerPays,
-    deductionMode, commissionBase, appCommissionTotal, netPayout, totalHPPOrder, netProfit, isBoncos
+    isPromoActive,
+    orderQty,
+    orderSubtotal,
+    minOrder,
+    promoPercent,
+    maxDiscountCap,
+    isMinOrderMet,
+    rawDiscount,
+    isDiscountCapped,
+    effectiveDiscount,
+    customerPays,
+    deductionMode,
+    commissionBase,
+    appCommissionTotal,
+    netPayout,
+    totalHPPOrder,
+    netProfit,
+    isBoncos,
+    recommendedCampaignPrice,
+    recommendedCampaignSubtotal
   };
 }

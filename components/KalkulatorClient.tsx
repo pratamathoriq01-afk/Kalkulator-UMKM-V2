@@ -12,15 +12,19 @@ import TabPromo from '@/components/tabs/TabPromo';
 import TabSummarize from '@/components/tabs/TabSummarize';
 import type { Product } from '@/lib/types';
 import { DEFAULT_PRESETS } from '@/lib/config';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Box, Store, Smartphone, Tag, FileText, Sparkles, Save } from 'lucide-react';
 
 type TabId = 'hpp' | 'offline' | 'online' | 'promo' | 'summarize';
 
-const TABS: { id: TabId; icon: string; label: string }[] = [
-  { id: 'hpp', icon: '📦', label: '1. HPP Murni' },
-  { id: 'offline', icon: '🏪', label: '2. Harga Toko' },
-  { id: 'online', icon: '🛵', label: '3. Harga Online' },
-  { id: 'promo', icon: '🏷️', label: '4. Promo' },
-  { id: 'summarize', icon: '📊', label: '5. Summarize' },
+const TABS: { id: TabId; icon: typeof Box; label: string }[] = [
+  { id: 'hpp', icon: Box, label: '1. HPP Murni' },
+  { id: 'offline', icon: Store, label: '2. Harga Toko' },
+  { id: 'online', icon: Smartphone, label: '3. Harga Online' },
+  { id: 'promo', icon: Tag, label: '4. Promo' },
+  { id: 'summarize', icon: FileText, label: '5. Summarize' },
 ];
 
 interface KalkulatorClientProps {
@@ -99,6 +103,9 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
       ...DEFAULT_PRESETS[0],
       id: nextId,
       name: `Resep Baru ${nextId}`,
+      pricingMode: 'food_cost',
+      targetFoodCostPercent: 35,
+      targetMarginPercent: 65,
       mainMaterials: [{ id: 1, name: 'Bahan Utama', totalPrice: 0, portions: 8, unit: 'porsi' }],
       bopMaterials: [{ id: 1, name: 'Overhead', totalPrice: 0, capacity: 1000, capUnit: 'ml', usage: 250, usageUnit: 'ml', portions: 8 }],
       packagings: [{ id: 1, name: 'Kemasan', totalPrice: 0, itemsPerPack: 50, unit: 'pcs' }],
@@ -144,7 +151,7 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
   if (!activeProd) return null;
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff]">
+    <div className="min-h-screen bg-stone-50/70 text-stone-900 font-sans antialiased selection:bg-[#F0E6D2] selection:text-[#2C1E16]">
       <Header
         productName={activeProd.name}
         onUpdateProductName={handleUpdateProductName}
@@ -180,45 +187,57 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
         onUpdateModel={setAiModel}
       />
 
-      {/* Main Layout */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+      {/* Main Layout Container */}
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
         {/* Page Heading */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#241710] tracking-tight">Kalkulator Keuangan UMKM Pintar</h1>
-            <p className="text-xs text-[#6B5541] font-bold mt-1">
-              Pilih modul di bawah untuk mengelola kalkulasi HPP, Harga Jual, & Diskon.
-              {isSaving && <span className="ml-2 text-amber-600">💾 Menyimpan...</span>}
+            <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+              Kalkulator Keuangan UMKM Pintar
+            </h1>
+            <p className="text-xs text-stone-500 font-medium mt-1 flex items-center gap-2">
+              <span>Modul kalkulasi HPP SAK EMKM, Food Cost Method, & Proteksi Promo Online.</span>
+              {isSaving && (
+                <span className="inline-flex items-center gap-1 text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-full text-[10px] border border-amber-200">
+                  <Save className="h-3 w-3 animate-pulse" /> Menyimpan...
+                </span>
+              )}
             </p>
           </div>
-          <button
+          <Button
             onClick={() => setIsAIOpen(true)}
-            className="bg-[#8C7259] hover:bg-[#6B5541] px-4 py-2.5 rounded-xl text-white font-extrabold text-xs flex items-center gap-2 cursor-pointer shadow-sm transition self-start md:self-auto"
+            variant="secondary"
+            className="bg-[#F0E6D2] hover:bg-[#E2D9C8] text-[#2C1E16] border border-[#D4C8B5] rounded-xl font-bold text-xs shadow-2xs self-start md:self-auto"
           >
-            🤖 Konsultasi Juragan AI Advisor
-          </button>
+            <Sparkles className="h-4 w-4 mr-1.5 text-[#8C7259]" />
+            <span>Juragan AI Advisor</span>
+          </Button>
         </div>
 
-        {/* Touch Bar Navigation */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold whitespace-nowrap transition cursor-pointer border shadow-sm ${
-                activeTab === t.id
-                  ? 'bg-[#4A3427] text-white border-[#241710]'
-                  : 'bg-white text-[#241710] border-[#D4C8B5] hover:bg-[#F0E6D2]'
-              }`}
-            >
-              <span>{t.icon}</span><span>{t.label}</span>
-            </button>
-          ))}
+        {/* Tab Navigation */}
+        <div className="w-full overflow-x-auto pb-1 scrollbar-none">
+          <Tabs value={activeTab} onValueChange={v => setActiveTab(v as TabId)} className="w-full">
+            <TabsList className="bg-white border border-stone-200 shadow-2xs p-1 h-12 inline-flex min-w-max gap-1">
+              {TABS.map(t => {
+                const Icon = t.icon;
+                return (
+                  <TabsTrigger
+                    key={t.id}
+                    value={t.id}
+                    className="rounded-xl px-4 py-2 text-xs font-bold transition-all data-[state=active]:bg-[#4A3427] data-[state=active]:text-white data-[state=active]:shadow-xs flex items-center gap-2"
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{t.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Active Tab */}
+          {/* Left: Active Tab Content */}
           <div className="lg:col-span-2">
             {activeTab === 'hpp' && <TabHPP prod={activeProd} onUpdateProduct={handleUpdateProduct} onNavigateTab={(tab) => setActiveTab(tab as TabId)} />}
             {activeTab === 'offline' && <TabOffline prod={activeProd} onUpdateProduct={handleUpdateProduct} onNavigateTab={(tab) => setActiveTab(tab as TabId)} />}
@@ -227,14 +246,14 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
             {activeTab === 'summarize' && <TabSummarize prod={activeProd} onOpenAI={() => setIsAIOpen(true)} />}
           </div>
 
-          {/* Right: Summary Panel */}
+          {/* Right: Sticky Summary Panel */}
           <div className="hidden lg:block">
             <div className="sticky top-20">
               <RightSummary prod={activeProd} onOpenAI={() => setIsAIOpen(true)} />
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

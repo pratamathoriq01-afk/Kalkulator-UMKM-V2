@@ -1,5 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Menu, Plus, Sparkles, Utensils } from 'lucide-react';
+
 interface HeaderProps {
   productName: string;
   onUpdateProductName: (name: string) => void;
@@ -8,57 +12,67 @@ interface HeaderProps {
   onOpenAI: () => void;
 }
 
-export default function Header({ productName, onUpdateProductName, onToggleDrawer, onAddProduct, onOpenAI }: HeaderProps) {
+export default function Header({
+  productName,
+  onUpdateProductName,
+  onToggleDrawer,
+  onAddProduct,
+  onOpenAI,
+}: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 bg-[#EFE9DC] text-[#241710] shadow-sm border-b border-[#D4C8B5]">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-4">
-        {/* Left: Drawer & Brand */}
-        <div className="flex items-center gap-3 flex-1">
-          <button
+    <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-2xs">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center justify-between gap-4">
+        {/* Left: Drawer Toggle & Product Name */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Button
+            variant="outline"
+            size="icon"
             onClick={onToggleDrawer}
             title="Buka Daftar Resep"
-            className="w-9 h-9 rounded-xl bg-[#F7F3E9] hover:bg-[#D4C8B5] text-[#241710] transition flex items-center justify-center font-bold text-base cursor-pointer border border-[#D4C8B5] shadow-sm"
+            className="rounded-xl border-stone-200 hover:bg-stone-100"
           >
-            ☰
-          </button>
-          <div className="flex items-center gap-3 flex-1 max-w-lg">
-            <div className="hidden sm:flex w-9 h-9 rounded-xl bg-[#4A3427] text-white items-center justify-center font-black text-base shadow-sm">
-              🍲
+            <Menu className="h-4 w-4 text-stone-700" />
+          </Button>
+
+          <div className="flex items-center gap-3 flex-1 min-w-0 max-w-xl">
+            <div className="hidden sm:flex h-9 w-9 items-center justify-center rounded-xl bg-[#4A3427] text-white shadow-xs">
+              <Utensils className="h-4 w-4" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={productName || ''}
                   onChange={(e) => onUpdateProductName(e.target.value)}
-                  className="text-base sm:text-lg font-black text-[#241710] bg-transparent border-b-2 border-[#BDB6A3] hover:border-[#8C7259] focus:border-[#4A3427] focus:outline-none w-full max-w-xs pb-0.5 tracking-tight"
+                  className="text-base font-bold text-stone-900 bg-transparent border-b-2 border-stone-200 hover:border-stone-400 focus:border-[#4A3427] focus:outline-none w-full max-w-xs pb-0.5 tracking-tight transition-colors"
                   placeholder="Nama Resep / Produk..."
                 />
-                <span className="hidden md:inline-flex items-center gap-1.5 bg-[#F7F3E9] text-[#241710] font-extrabold border border-[#D4C8B5] px-2.5 py-0.5 rounded-full text-[10px] whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#8C7259] animate-pulse" />
-                  SAK EMKM Standard
-                </span>
+                <Badge variant="secondary" className="hidden md:inline-flex bg-stone-100 text-stone-700 border-stone-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#8C7259] animate-pulse" />
+                  SAK EMKM & FnB Standard
+                </Badge>
               </div>
             </div>
           </div>
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2.5">
-          <button
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
             onClick={onOpenAI}
-            className="bg-[#8C7259] hover:bg-[#6B5541] px-4 py-2.5 rounded-xl text-white font-extrabold text-xs flex items-center gap-2 cursor-pointer shadow-sm transition"
+            className="rounded-xl font-bold bg-[#F0E6D2] hover:bg-[#E2D9C8] text-[#2C1E16] border border-[#D4C8B5]"
           >
-            <span>🤖</span>
-            <span className="hidden sm:inline">Juragan AI Advisor</span>
-          </button>
-          <button
+            <Sparkles className="h-3.5 w-3.5 text-[#8C7259]" />
+            <span className="hidden sm:inline">AI Advisor</span>
+          </Button>
+          <Button
             onClick={onAddProduct}
-            className="bg-[#8C7259] hover:bg-[#6B5541] px-4 py-2.5 rounded-xl text-white font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
+            className="rounded-xl font-bold bg-[#4A3427] hover:bg-[#34241B]"
           >
-            <span>➕</span>
+            <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Resep Baru</span>
-          </button>
+          </Button>
         </div>
       </div>
     </header>

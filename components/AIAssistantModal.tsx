@@ -3,6 +3,18 @@
 import { useState } from 'react';
 import { formatIDR, calculateHPP, calculateOfflinePrice, calculateOnlinePrice, calculatePromoSim } from '@/lib/math';
 import type { Product, AIAnalysisResult } from '@/lib/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Sparkles, Bot, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 
 interface AIAssistantModalProps {
   isOpen: boolean;
@@ -16,7 +28,15 @@ interface AIAssistantModalProps {
 
 const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
-export default function AIAssistantModal({ isOpen, onClose, prod, apiKey, model, onUpdateApiKey, onUpdateModel }: AIAssistantModalProps) {
+export default function AIAssistantModal({
+  isOpen,
+  onClose,
+  prod,
+  apiKey,
+  model,
+  onUpdateApiKey,
+  onUpdateModel,
+}: AIAssistantModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AIAnalysisResult | null>(null);
   const [error, setError] = useState('');
@@ -26,7 +46,7 @@ export default function AIAssistantModal({ isOpen, onClose, prod, apiKey, model,
   const hppData = calculateHPP(prod);
   const offlineData = calculateOfflinePrice(hppData.hppMurni, prod);
   const onlineData = calculateOnlinePrice(offlineData.effectiveOfflinePrice, prod);
-  const promoData = calculatePromoSim(hppData.hppMurni, onlineData.effectiveOnlinePrice, prod);
+  const promoData = calculatePromoSim(hppData.hppMurni, onlineData.effectiveOnlinePrice, offlineData.effectiveOfflinePrice, prod);
 
   const handleAnalyze = async () => {
     setIsLoading(true);
@@ -41,7 +61,6 @@ export default function AIAssistantModal({ isOpen, onClose, prod, apiKey, model,
       });
 
       if (!res.ok) {
-        // fallback to local heuristic
         const localResult = generateLocalHeuristic(prod, hppData, offlineData, promoData);
         setResult(localResult);
         return;
@@ -58,97 +77,118 @@ export default function AIAssistantModal({ isOpen, onClose, prod, apiKey, model,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#F7F3E9] rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#D4C8B5] flex flex-col">
-        
-        {/* Modal Header */}
-        <div className="p-6 bg-[#4A3427] text-white rounded-t-3xl flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-black text-white">🤖 Juragan AI Advisor</h2>
-            <p className="text-xs text-[#EFE9DC] font-semibold">Analisis keuangan UMKM berstandar SAK EMKM</p>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-stone-200 bg-white">
+        {/* Header */}
+        <div className="p-6 bg-[#4A3427] text-white rounded-t-3xl space-y-1">
+          <div className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-[#F0E6D2]" />
+            <DialogTitle className="text-lg font-black text-white">Juragan AI Advisor</DialogTitle>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/20 text-white hover:bg-white/30 transition cursor-pointer font-bold flex items-center justify-center">✕</button>
+          <DialogDescription className="text-xs text-[#EFE9DC] font-medium opacity-90">
+            Analisis finansial presisi berstandar SAK EMKM & Industri FnB
+          </DialogDescription>
         </div>
 
-        <div className="p-6 space-y-4">
-          {/* Product Summary */}
-          <div className="bg-white rounded-2xl p-4 border border-[#D4C8B5] grid grid-cols-3 gap-3 text-center">
-            <div><span className="text-[10px] text-[#6B5541] font-bold block">HPP Murni</span><span className="text-sm font-black font-mono text-[#241710]">{formatIDR(hppData.hppMurni)}</span></div>
-            <div><span className="text-[10px] text-[#6B5541] font-bold block">Harga Offline</span><span className="text-sm font-black font-mono text-[#241710]">{formatIDR(offlineData.effectiveOfflinePrice)}</span></div>
-            <div><span className="text-[10px] text-[#6B5541] font-bold block">Status Promo</span><span className={`text-sm font-black ${promoData.isBoncos ? 'text-rose-600' : 'text-emerald-600'}`}>{promoData.isBoncos ? '🔴 BONCOS' : '🟢 AMAN'}</span></div>
+        <div className="p-6 space-y-5">
+          {/* Summary Financial Cards */}
+          <div className="grid grid-cols-3 gap-3 text-center bg-stone-50 p-3.5 rounded-2xl border border-stone-200">
+            <div>
+              <span className="text-[10px] text-stone-500 font-bold block uppercase">HPP Murni</span>
+              <span className="text-sm font-black font-mono text-stone-900">{formatIDR(hppData.hppMurni)}</span>
+            </div>
+            <div>
+              <span className="text-[10px] text-stone-500 font-bold block uppercase">Harga Offline</span>
+              <span className="text-sm font-black font-mono text-stone-900">{formatIDR(offlineData.effectiveOfflinePrice)}</span>
+            </div>
+            <div>
+              <span className="text-[10px] text-stone-500 font-bold block uppercase">Status Promo</span>
+              <Badge variant={promoData.isBoncos ? 'destructive' : 'success'} className="text-[10px] mt-0.5">
+                {promoData.isBoncos ? '🔴 BONCOS' : '🟢 AMAN'}
+              </Badge>
+            </div>
           </div>
 
-          {/* API Key Settings */}
-          <div className="bg-white rounded-2xl p-4 border border-[#D4C8B5] space-y-3">
-            <p className="text-xs font-extrabold text-[#241710] uppercase tracking-wider">Pengaturan Gemini AI (Opsional)</p>
-            <div>
-              <label className="text-[10px] font-bold text-[#6B5541] block mb-1">Gemini API Key (opsional - bisa diisi di sini atau diset di server)</label>
-              <input
+          {/* AI Settings */}
+          <div className="p-4 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-stone-700 block">Pengaturan Gemini AI Engine</span>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] text-stone-600 font-medium">API Key Gemini (Opsional)</Label>
+              <Input
                 type="password"
                 value={apiKey}
                 onChange={(e) => onUpdateApiKey(e.target.value)}
                 placeholder="Biarkan kosong jika sudah ada GEMINI_API_KEY di server..."
-                className="w-full bg-[#F7F3E9] border border-[#D4C8B5] rounded-xl text-xs font-bold px-3 py-2 focus:outline-none focus:border-[#4A3427] text-[#241710]"
               />
             </div>
-            <div>
-              <label className="text-[10px] font-bold text-[#6B5541] block mb-1">Model AI</label>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] text-stone-600 font-medium">Model AI</Label>
               <select
                 value={model}
                 onChange={(e) => onUpdateModel(e.target.value)}
-                className="w-full bg-[#F7F3E9] border border-[#D4C8B5] rounded-xl text-xs font-bold px-3 py-2 focus:outline-none focus:border-[#4A3427] text-[#241710]"
+                className="w-full bg-white border border-stone-200 rounded-xl text-xs font-bold px-3 py-2 focus:outline-none focus:border-[#4A3427] text-stone-900"
               >
                 {MODELS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Analyze Button */}
-          <button
+          {/* Action Button */}
+          <Button
             onClick={handleAnalyze}
             disabled={isLoading}
-            className="w-full py-3.5 bg-[#4A3427] hover:bg-[#241710] text-white rounded-2xl font-extrabold text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full h-11 bg-[#4A3427] hover:bg-[#34241B] rounded-xl text-xs font-bold shadow-xs"
           >
             {isLoading ? (
-              <><span className="animate-spin">⟳</span> Sedang Menganalisis...</>
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                <span>Sedang Menganalisis...</span>
+              </>
             ) : (
-              <><span>🤖</span> Analisis Sekarang</>
+              <>
+                <Sparkles className="h-4 w-4 mr-2 text-[#F0E6D2]" />
+                <span>Analisis Sekarang</span>
+              </>
             )}
-          </button>
+          </Button>
 
-          {error && <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-sm text-rose-700 font-semibold">{error}</div>}
+          {error && (
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-semibold flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-rose-600" />
+              <span>{error}</span>
+            </div>
+          )}
 
-          {/* Result */}
+          {/* Analysis Results */}
           {result && (
             <div className="space-y-4 animate-in fade-in duration-300">
-              <div className="flex items-center gap-2 text-[10px] text-[#6B5541] font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-center gap-2 text-[10px] text-stone-500 font-bold">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 Sumber: {result.source}
               </div>
 
               <div className="bg-[#4A3427] text-white rounded-2xl p-4 space-y-1">
                 <p className="text-[10px] text-[#EFE9DC] font-extrabold uppercase tracking-wider">Ringkasan Eksekutif</p>
-                <p className="text-sm font-semibold leading-relaxed">{result.summary}</p>
+                <p className="text-xs font-medium leading-relaxed text-stone-100">{result.summary}</p>
               </div>
 
               {[
-                { key: 'hppAnalysis', label: '🏭 Analisis HPP & Biaya', color: 'bg-amber-50 border-amber-200 text-amber-900' },
-                { key: 'pricingStrategy', label: '💰 Strategi Harga', color: 'bg-blue-50 border-blue-200 text-blue-900' },
-                { key: 'promoSafety', label: '🏷️ Keamanan Promo', color: 'bg-rose-50 border-rose-200 text-rose-900' },
-              ].map(({ key, label, color }) => (
-                <div key={key} className={`rounded-2xl p-4 border space-y-1 ${color}`}>
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider">{label}</p>
-                  <p className="text-sm font-semibold leading-relaxed">{result[key as keyof AIAnalysisResult] as string}</p>
+                { key: 'hppAnalysis', label: '🏭 Analisis HPP & Biaya SAK EMKM', cls: 'bg-stone-50 border-stone-200 text-stone-900' },
+                { key: 'pricingStrategy', label: '💰 Strategi Harga & Margin FnB', cls: 'bg-stone-50 border-stone-200 text-stone-900' },
+                { key: 'promoSafety', label: '🏷️ Keamanan Promo Online/Offline', cls: result.promoSafety.includes('BONCOS') || result.promoSafety.includes('RUGI') ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-emerald-50/60 border-emerald-200 text-emerald-900' },
+              ].map(({ key, label, cls }) => (
+                <div key={key} className={`rounded-2xl p-4 border space-y-1 ${cls}`}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">{label}</p>
+                  <p className="text-xs font-medium leading-relaxed">{result[key as keyof AIAnalysisResult] as string}</p>
                 </div>
               ))}
 
               {result.actionItems?.length > 0 && (
-                <div className="bg-white rounded-2xl p-4 border border-[#D4C8B5] space-y-2">
-                  <p className="text-[10px] font-extrabold text-[#241710] uppercase tracking-wider">✅ Langkah Aksi Taktis</p>
+                <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2">
+                  <p className="text-[10px] font-bold text-stone-900 uppercase tracking-wider">✅ Langkah Aksi Taktis</p>
                   {result.actionItems.map((item, i) => (
-                    <div key={i} className="flex gap-2 text-sm text-[#241710] font-semibold">
-                      <span className="text-[#8C7259] font-black">{i + 1}.</span>
+                    <div key={i} className="flex gap-2 text-xs text-stone-800 font-medium">
+                      <span className="text-[#8C7259] font-bold">{i + 1}.</span>
                       <span>{item}</span>
                     </div>
                   ))}
@@ -157,8 +197,8 @@ export default function AIAssistantModal({ isOpen, onClose, prod, apiKey, model,
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -176,34 +216,34 @@ function generateLocalHeuristic(
     hppAnalysis = `Porsi biaya Bahan Baku Utama Anda sangat dominan (${hppData.mainPct.toFixed(1)}%). Pertimbangkan pembelian bulk untuk mendapat potongan harga grosir.`;
     actionItems.push(`Negosiasikan harga beli bahan utama dengan supplier untuk pembelian volume besar.`);
   } else if (hppData.packPct > 15) {
-    hppAnalysis = `Proporsi biaya Kemasan cukup tinggi (${hppData.packPct.toFixed(1)}%). Cari alternatif kemasan ekonomis tanpa mengurangi tampilan produk.`;
+    hppAnalysis = `Proporsi biaya Kemasan cukup tinggi (${hppData.packPct.toFixed(1)}%). Cari alternatif kemasan ekonomis tanpa mengurangi kualitas produk.`;
     actionItems.push(`Cari vendor kemasan polos dengan stiker brand custom untuk menekan biaya.`);
   } else {
-    hppAnalysis = `Struktur biaya HPP Murni seimbang: ${hppData.mainPct.toFixed(1)}% Bahan Utama, ${hppData.bopPct.toFixed(1)}% BOP, ${hppData.packPct.toFixed(1)}% Kemasan.`;
+    hppAnalysis = `Struktur biaya HPP Murni SAK EMKM seimbang: ${hppData.mainPct.toFixed(1)}% Bahan Utama, ${hppData.bopPct.toFixed(1)}% BOP, ${hppData.packPct.toFixed(1)}% Kemasan.`;
   }
 
   let pricingStrategy = '';
-  if (offlineData.marginRatio < 15) {
-    pricingStrategy = `PERINGATAN MARGIN KRITIS! Margin offline hanya ${offlineData.marginRatio.toFixed(1)}% (${fmt(offlineData.netOfflineMargin)}/porsi). Naikkan harga ke minimal ${fmt(offlineData.recommendedPrice)}.`;
-    actionItems.push(`Naikkan harga toko offline ke ${fmt(offlineData.recommendedPrice)} untuk margin sehat minimal 30%.`);
-  } else if (offlineData.marginRatio >= 30) {
-    pricingStrategy = `Margin offline sangat sehat (${offlineData.marginRatio.toFixed(1)}%). Keuntungan bersih ${fmt(offlineData.netOfflineMargin)} per porsi sudah aman.`;
+  if (offlineData.marginRatio < 25) {
+    pricingStrategy = `PERINGATAN MARGIN RENDAH! Gross Margin offline hanya ${offlineData.marginRatio.toFixed(1)}% (${fmt(offlineData.netOfflineMargin)}/porsi). Untuk FnB, disarankan Gross Margin minimal 50-65% (Food Cost 35%).`;
+    actionItems.push(`Sesuaikan harga toko ke ${fmt(offlineData.recommendedPrice)} agar Food Cost berada di target ideal.`);
+  } else if (offlineData.marginRatio >= 50) {
+    pricingStrategy = `Gross Margin offline sangat sehat (${offlineData.marginRatio.toFixed(1)}%, Food Cost ${offlineData.foodCostRatio.toFixed(1)}%). Keuntungan bersih ${fmt(offlineData.netOfflineMargin)} per porsi aman.`;
   } else {
-    pricingStrategy = `Margin offline pas-pasan (${offlineData.marginRatio.toFixed(1)}%). Pertimbangkan kenaikan harga bertahap untuk buffer biaya operasional.`;
+    pricingStrategy = `Gross Margin offline cukup baik (${offlineData.marginRatio.toFixed(1)}%). Sisa laba bersih ${fmt(offlineData.netOfflineMargin)} per porsi.`;
   }
 
   let promoSafety = '';
   if (promoData.isBoncos) {
-    promoSafety = `🚨 PROMO RUGI! Pada ${promoData.orderQty} porsi, uang cair (${fmt(promoData.netPayout)}) lebih kecil dari HPP (${fmt(promoData.totalHPPOrder)}). Rugi ${fmt(Math.abs(promoData.netProfit))}.`;
-    actionItems.push(`Turunkan batas maksimal diskon atau naikkan minimal pembelian promo.`);
+    promoSafety = `🚨 PROMO RUGI! Uang cair (${fmt(promoData.netPayout)}) lebih kecil dari total HPP (${fmt(promoData.totalHPPOrder)}). Gunakan rekomendasi Harga Kampanye ${fmt(promoData.recommendedCampaignPrice)} sebelum diskon.`;
+    actionItems.push(`Gunakan Harga Kampanye ${fmt(promoData.recommendedCampaignPrice)} sebelum diskon di aplikasi.`);
   } else {
     promoSafety = `🟢 PROMO AMAN! Pada ${promoData.orderQty} porsi, laba bersih promo ${fmt(promoData.netProfit)}. HPP tertutup sempurna.`;
   }
 
   const statusText = promoData.isBoncos ? 'membutuhkan penyesuaian promo segera' : 'berada dalam kondisi finansial yang baik';
   return {
-    source: 'Local Smart Financial AI Engine',
-    summary: `Resep "${prod.name}" memiliki HPP Murni ${fmt(hppData.hppMurni)}/porsi dengan margin ${offlineData.marginStatus.label} (${offlineData.marginRatio.toFixed(1)}%). Produk ${statusText}.`,
+    source: 'Local Financial AI Engine (SAK EMKM)',
+    summary: `Resep "${prod.name}" memiliki HPP Murni ${fmt(hppData.hppMurni)}/porsi dengan Gross Margin ${offlineData.marginRatio.toFixed(1)}% (Food Cost ${offlineData.foodCostRatio.toFixed(1)}%). Produk ${statusText}.`,
     hppAnalysis, pricingStrategy, promoSafety, actionItems,
   };
 }
