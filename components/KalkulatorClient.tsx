@@ -188,18 +188,18 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
       />
 
       {/* Main Layout Container */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
         {/* Page Heading */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
-              Kalkulator Keuangan UMKM Pintar
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold text-[#191c1e] tracking-tight">
+              Lumina Finance — UMKM Calc Engine
             </h1>
-            <p className="text-xs text-stone-500 font-semibold mt-1 flex items-center gap-2">
-              <span>Lumina Engine — HPP SAK EMKM, Target Food Cost, Reverse Margin & Proteksi Promo.</span>
+            <p className="text-xs text-[#45464d] font-medium mt-1 flex items-center gap-2">
+              <span>Standard SAK EMKM: HPP Murni, Target Food Cost, Reverse Margin & Proteksi Promo.</span>
               {isSaving && (
-                <span className="inline-flex items-center gap-1 text-amber-800 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full text-[10px] border border-amber-200 shadow-2xs">
-                  <Save className="h-3 w-3 animate-pulse text-amber-600" /> Menyimpan...
+                <span className="inline-flex items-center gap-1 text-[#07006c] font-semibold bg-[#e1e0ff] px-2.5 py-0.5 rounded-full text-[10px]">
+                  <Save className="h-3 w-3 animate-pulse" /> Menyimpan...
                 </span>
               )}
             </p>
@@ -207,24 +207,24 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
           <Button
             onClick={() => setIsAIOpen(true)}
             variant="secondary"
-            className="bg-[#F0E6D2] hover:bg-[#E2D9C8] text-[#2C1E16] border border-[#D4C8B5] rounded-xl font-bold text-xs shadow-2xs self-start md:self-auto px-4 py-2.5"
+            className="bg-[#e1e0ff] hover:bg-[#c0c1ff] text-[#07006c] border-none rounded-lg font-semibold text-xs shadow-2xs self-start md:self-auto px-4 py-2"
           >
-            <Sparkles className="h-4 w-4 mr-1.5 text-[#8C7259]" />
+            <Sparkles className="h-4 w-4 mr-1.5 text-[#4648d4]" />
             <span>Juragan AI Advisor</span>
           </Button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="w-full overflow-x-auto pb-1.5 scrollbar-none">
+        {/* Tab Navigation (Stitch Nav Style) */}
+        <div className="w-full overflow-x-auto pb-1 scrollbar-none">
           <Tabs value={activeTab} onValueChange={v => setActiveTab(v as TabId)} className="w-full">
-            <TabsList className="bg-white/90 border border-stone-200/90 shadow-2xs p-1.5 h-13 inline-flex min-w-max gap-1.5 rounded-2xl">
+            <TabsList className="bg-white border border-[#e0e3e5] shadow-2xs p-1 h-12 inline-flex min-w-max gap-1 rounded-xl">
               {TABS.map(t => {
                 const Icon = t.icon;
                 return (
                   <TabsTrigger
                     key={t.id}
                     value={t.id}
-                    className="rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all data-[state=active]:bg-[#4A3427] data-[state=active]:text-white data-[state=active]:shadow-xs flex items-center gap-2 text-stone-600 hover:text-stone-900"
+                    className="rounded-lg px-4 py-2 text-xs font-semibold transition-all data-[state=active]:bg-[#e1e0ff] data-[state=active]:text-[#07006c] data-[state=active]:font-bold data-[state=active]:shadow-2xs flex items-center gap-2 text-[#45464d] hover:text-[#191c1e] hover:bg-[#f2f4f6]"
                   >
                     <Icon className="h-4 w-4" />
                     <span>{t.label}</span>
