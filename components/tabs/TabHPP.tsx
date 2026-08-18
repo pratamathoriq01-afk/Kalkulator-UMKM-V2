@@ -85,7 +85,24 @@ export default function TabHPP({ prod, onUpdateProduct, onNavigateTab }: TabHPPP
         </CardContent>
       </Card>
 
-      {/* A. Bahan Baku Utama */}
+      {/* Validation Error Banner */}
+      {hppData.validationErrors.length > 0 && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-1.5">
+          <div className="flex items-center gap-2 font-bold text-rose-900 text-xs uppercase tracking-wider">
+            <span>⚠️</span>
+            <span>Peringatan Validasi Input HPP — Nilai Harus &gt; 0</span>
+          </div>
+          <ul className="space-y-1">
+            {hppData.validationErrors.map((err, i) => (
+              <li key={i} className="text-xs text-rose-800 font-semibold flex items-start gap-1.5">
+                <span className="mt-0.5 shrink-0">•</span>
+                <span>{err}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <Card className="border-stone-200 bg-white">
         <CardHeader className="p-5 sm:p-6 pb-3 border-b border-stone-100 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">

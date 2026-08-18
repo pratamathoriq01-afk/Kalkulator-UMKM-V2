@@ -69,6 +69,7 @@ export interface HPPData {
   mainPct: number;
   bopPct: number;
   packPct: number;
+  validationErrors: string[]; // Pesan validasi input (misal: kapasitas = 0)
 }
 
 export interface MarginStatus {
@@ -101,6 +102,7 @@ export interface OfflinePromoData {
   netMarginAfterDiscount: number;
   marginRatioAfterDiscount: number;
   isLosing: boolean;
+  hargaFinalCoret: number; // Harga coret yang harus dipasang di menu (reverse dari diskon)
 }
 
 export interface OnlineData {
@@ -114,6 +116,7 @@ export interface OnlineData {
   effectiveOnlinePrice: number;
   commissionAmount: number;
   simulatedPayout: number;
+  isUnderPricingRisk: boolean; // True jika user override < rekomendasi reverse-margin
 }
 
 export interface PromoData {
@@ -130,11 +133,13 @@ export interface PromoData {
   customerPays: number;
   deductionMode: string;
   commissionBase: number;
+  commissionOnlyAmount: number; // Komisi platform saja (tanpa fixedFee) — untuk display baris terpisah di struk
   appCommissionTotal: number;
   netPayout: number;
   totalHPPOrder: number;
   netProfit: number;
   isBoncos: boolean;
+  saranKenaikanHarga: string; // Pesan saran nominal kenaikan harga minimum saat isBoncos
   recommendedCampaignPrice: number;
   recommendedCampaignSubtotal: number;
 }

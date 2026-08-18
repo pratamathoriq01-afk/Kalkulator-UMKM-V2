@@ -89,6 +89,21 @@ export default function TabOnline({ prod, onUpdateProduct, onNavigateTab }: TabO
                 </div>
               </div>
             </div>
+
+            {/* Guard Clause: isUnderPricingRisk Warning */}
+            {onlineData.isUnderPricingRisk && (
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 flex items-start gap-3">
+                <span className="text-xl shrink-0">🚨</span>
+                <div className="space-y-1">
+                  <p className="text-xs font-extrabold text-rose-900 uppercase tracking-wider">Peringatan: Harga Override Di Bawah Ambang Aman!</p>
+                  <p className="text-xs text-rose-800 font-semibold leading-relaxed">
+                    Harga {formatIDR(onlineData.effectiveOnlinePrice)} lebih rendah dari rekomendasi sistem {formatIDR(onlineData.recommendedOnline)}.
+                    Potensi kerugian bersih <span className="font-black">{formatIDR(onlineData.recommendedOnline - onlineData.effectiveOnlinePrice)}/porsi</span>.
+                    Sistem mendeteksi <span className="font-black">status_potensi_boncos = TRUE</span> — transaksi online berpotensi tidak menutup HPP!
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Simulation Proof */}

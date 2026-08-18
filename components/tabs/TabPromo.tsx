@@ -159,7 +159,8 @@ export default function TabPromo({ prod, onUpdateProduct }: TabPromoProps) {
                   <h4 className="font-bold uppercase text-stone-900 border-b border-stone-200 pb-2">B. SISI PENJUAL</h4>
                   <div className="space-y-2 text-stone-700 font-semibold">
                     <div className="flex justify-between"><span>Total dari Konsumen:</span><span className="font-mono font-bold text-stone-900">{formatIDR(promoData.customerPays)}</span></div>
-                    <div className="flex justify-between text-rose-600 font-bold"><span>Potongan Komisi App ({prod.commissionPercent}%):</span><span className="font-mono">- {formatIDR(promoData.appCommissionTotal)}</span></div>
+                    <div className="flex justify-between text-rose-600 font-bold"><span>Potongan Komisi Platform ({prod.commissionPercent}%):</span><span className="font-mono">- {formatIDR(promoData.commissionOnlyAmount)}</span></div>
+                    <div className="flex justify-between text-rose-600 font-bold"><span>Potongan Biaya Layanan Tetap:</span><span className="font-mono">- {formatIDR(prod.fixedFee)}</span></div>
                     <div className="flex justify-between pt-2 border-t border-stone-200 font-black text-sm text-stone-900 bg-white p-2.5 rounded-xl border border-stone-200"><span>Uang Cair ke Penjual:</span><span className="font-mono text-emerald-700">{formatIDR(promoData.netPayout)}</span></div>
                   </div>
                 </div>
@@ -187,7 +188,7 @@ export default function TabPromo({ prod, onUpdateProduct }: TabPromoProps) {
                       </span>
                     </div>
                     <p className="text-xs text-right max-w-xs leading-relaxed font-medium text-stone-600">
-                      {promoData.isBoncos ? '🔴 HPP TIDAK TERTUTUP! Naikkan syarat minimal belanja atau gunakan rekomendasi Harga Kampanye (Harga Coret).' : '🟢 HPP murni tertutup sempurna dengan sisa laba bersih aman.'}
+                      {promoData.saranKenaikanHarga}
                     </p>
                   </div>
                 </div>
@@ -300,6 +301,37 @@ export default function TabPromo({ prod, onUpdateProduct }: TabPromoProps) {
                     </p>
                   </div>
                 </div>
+
+                {/* Harga Coret Card — hanya tampil jika promo aktif */}
+                {offlinePromo.isOfflinePromoActive && (
+                  <div className="mt-4 p-5 rounded-2xl bg-[#4A3427] text-white border border-[#241710] space-y-2">
+                    <div className="flex items-center gap-2 border-b border-white/15 pb-2">
+                      <span className="text-base">🏷️</span>
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#F0E6D2]">
+                        HARGA CORET YANG HARUS DIPASANG DI MENU / DISPLAY TOKO
+                      </h4>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <span className="text-[11px] text-[#EFE9DC] font-medium block">
+                          Pasang harga ini di papan (coret), agar setelah diskon {offlinePromo.discountPercent.toFixed(0)}% konsumen membayar tepat harga dasar:
+                        </span>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <span className="text-3xl font-black font-mono text-white line-through opacity-60 decoration-rose-400 decoration-2">{formatIDR(offlinePromo.hargaFinalCoret)}</span>
+                          <span className="text-base font-bold text-[#EFE9DC]">→ setelah diskon →</span>
+                          <span className="text-xl font-black font-mono text-emerald-300">{formatIDR(offlineData.effectiveOfflinePrice)}</span>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/10 rounded-2xl border border-white/15 text-xs text-[#EFE9DC] max-w-[200px] leading-relaxed font-medium">
+                        Rumus: Harga Dasar ÷ (1 - Diskon%)
+                        <br />
+                        = {formatIDR(offlineData.effectiveOfflinePrice)} ÷ (1 - {(offlinePromo.discountPercent/100).toFixed(2)})
+                        <br />
+                        = <strong className="text-white">{formatIDR(offlinePromo.hargaFinalCoret)}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

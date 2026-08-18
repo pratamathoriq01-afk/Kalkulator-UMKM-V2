@@ -134,7 +134,8 @@ export default function RightSummary({ prod, onOpenAI }: RightSummaryProps) {
           <div className="flex justify-between text-stone-600 font-semibold"><span>Pesanan ({promoData.orderQty} porsi):</span><span>{formatIDR(promoData.orderSubtotal)}</span></div>
           <div className="flex justify-between text-rose-600 font-bold"><span>Diskon Promo ({promoData.promoPercent}%):</span><span>- {formatIDR(promoData.effectiveDiscount)}</span></div>
           <div className="flex justify-between text-stone-900 font-bold"><span>Dibayar Konsumen:</span><span>{formatIDR(promoData.customerPays)}</span></div>
-          <div className="flex justify-between text-rose-600 font-bold"><span>Potongan Komisi ({prod.commissionPercent}%):</span><span>- {formatIDR(promoData.appCommissionTotal)}</span></div>
+          <div className="flex justify-between text-rose-600 font-bold"><span>Komisi Platform ({prod.commissionPercent}%):</span><span>- {formatIDR(promoData.commissionOnlyAmount)}</span></div>
+          <div className="flex justify-between text-rose-600 font-bold"><span>Biaya Layanan Tetap:</span><span>- {formatIDR(prod.fixedFee)}</span></div>
           <div className="flex justify-between pt-1.5 border-t border-stone-200 font-bold text-stone-900 font-sans"><span>Net Payout Toko:</span><span className="font-mono text-sm font-black">{formatIDR(promoData.netPayout)}</span></div>
           <div className="flex justify-between pt-1 border-t border-stone-200 text-xs font-bold font-sans">
             <span>Laba Bersih Promo:</span>
