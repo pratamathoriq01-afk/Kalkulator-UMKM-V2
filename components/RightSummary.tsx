@@ -121,22 +121,22 @@ export default function RightSummary({ prod, onOpenAI }: RightSummaryProps) {
       </div>
 
       {/* Promo Struk */}
-      <Card className="border-stone-200 bg-white">
+      <Card className="border-stone-200 bg-white shadow-2xs">
         <CardContent className="p-4 space-y-2.5 text-xs font-mono">
           <div className="flex justify-between items-center border-b border-stone-100 pb-2 font-sans">
             <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1">
-              <Receipt className="h-3 w-3" /> Struk Promo App
+              <Receipt className="h-3.5 w-3.5 text-[#4A3427]" /> Struk Simulasi App
             </span>
-            <Badge variant={promoData.isBoncos ? 'destructive' : 'success'} className="text-[9px] px-2 py-0">
+            <Badge variant={promoData.isBoncos ? 'destructive' : 'success'} className="text-[9px] px-2 py-0 font-bold">
               {promoData.isBoncos ? '🔴 RUGI PROMO' : '🟢 AMAN PROMO'}
             </Badge>
           </div>
-          <div className="flex justify-between text-stone-600 font-semibold"><span>Pesanan ({promoData.orderQty} porsi):</span><span>{formatIDR(promoData.orderSubtotal)}</span></div>
+          <div className="flex justify-between text-stone-600 font-semibold"><span>Pesanan ({promoData.orderQty} porsi):</span><span className="text-stone-900 font-bold">{formatIDR(promoData.orderSubtotal)}</span></div>
           <div className="flex justify-between text-rose-600 font-bold"><span>Diskon Promo ({promoData.promoPercent}%):</span><span>- {formatIDR(promoData.effectiveDiscount)}</span></div>
-          <div className="flex justify-between text-stone-900 font-bold"><span>Dibayar Konsumen:</span><span>{formatIDR(promoData.customerPays)}</span></div>
+          <div className="flex justify-between text-stone-900 font-bold pt-1 border-t border-dashed border-stone-200"><span>Dibayar Konsumen:</span><span className="font-extrabold">{formatIDR(promoData.customerPays)}</span></div>
           <div className="flex justify-between text-rose-600 font-bold"><span>Komisi Platform ({prod.commissionPercent}%):</span><span>- {formatIDR(promoData.commissionOnlyAmount)}</span></div>
           <div className="flex justify-between text-rose-600 font-bold"><span>Biaya Layanan Tetap:</span><span>- {formatIDR(prod.fixedFee)}</span></div>
-          <div className="flex justify-between pt-1.5 border-t border-stone-200 font-bold text-stone-900 font-sans"><span>Net Payout Toko:</span><span className="font-mono text-sm font-black">{formatIDR(promoData.netPayout)}</span></div>
+          <div className="flex justify-between pt-2 border-t border-stone-200 font-bold text-stone-900 font-sans"><span>Net Payout Toko:</span><span className="font-mono text-sm font-black text-emerald-700">{formatIDR(promoData.netPayout)}</span></div>
           <div className="flex justify-between pt-1 border-t border-stone-200 text-xs font-bold font-sans">
             <span>Laba Bersih Promo:</span>
             <span className={`font-mono text-sm font-black ${promoData.isBoncos ? 'text-rose-600' : 'text-emerald-700'}`}>
