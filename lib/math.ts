@@ -1,5 +1,5 @@
 import type {
-  Product, HPPData, OfflineData, OfflinePromoData, OnlineData, PromoData, MarginStatus, PricingMode
+  Product, HPPData, OfflineData, OfflinePromoData, OnlineData, PromoData, MarginStatus
 } from './types';
 import { MARGIN_STATUS } from './config';
 
@@ -15,7 +15,7 @@ export function formatDecimalIDR(val: number | undefined | null): string {
   return 'Rp ' + formatted;
 }
 
-/* Modul 1: Biaya Produksi & HPP Murni per Porsi (SAK EMKM 3 Pilar) */
+/* ─── Modul 1: HPP Murni per Porsi (SAK EMKM 3 Pilar) ─── */
 export function calculateHPP(prod: Product): HPPData {
   const validationErrors: string[] = [];
 
@@ -73,53 +73,47 @@ export function calculateHPP(prod: Product): HPPData {
   return { mainList, bopList, packList, totalMainMaterials, totalBopMaterials, totalPackagings, hppMurni, mainPct, bopPct, packPct, validationErrors };
 }
 
-/* Modul 2: Harga Jual Toko (Offline) & Fleksibilitas Margin */
+/* ─── Modul 2: Harga Jual Toko (Gross Margin Method) ─── */
 export function calculateOfflinePrice(hppMurni: number, prod: Product): OfflineData {
-  const pricingMode: PricingMode = prod.pricingMode || 'food_cost';
-  const targetFoodCostPercent = Math.min(99, Math.max(1, parseFloat(String(prod.targetFoodCostPercent ?? 35)) || 35));
-  const targetMarginPercent = Math.min(99, Math.max(1, parseFloat(String(prod.targetMarginPercent ?? 65)) || 65));
-  const marginPercent = parseFloat(String(prod.marginPercent)) || 50;
+  // Clamp target margin to [1, 99]%
+  const targetMarginPercent = Math.min(99, Math.max(1, parseFloat(String(prod.targetMarginPercent ?? 60)) || 60));
 
+  // Harga Jual = HPP ÷ (1 - Margin%)
   let recommendedPriceRaw = 0;
   if (hppMurni > 0) {
-    if (pricingMode === 'food_cost') {
-      recommendedPriceRaw = hppMurni / (targetFoodCostPercent / 100);
-    } else if (pricingMode === 'gross_margin') {
-      recommendedPriceRaw = hppMurni / (1 - (targetMarginPercent / 100));
-    } else {
-      recommendedPriceRaw = hppMurni + (hppMurni * (marginPercent / 100));
-    }
+    recommendedPriceRaw = hppMurni / (1 - targetMarginPercent / 100);
   }
 
+  // Bulatkan ke ratusan terdekat yang ≥ raw price
   const recommendedPrice = Math.ceil(recommendedPriceRaw / 100) * 100;
-  const effectiveOfflinePrice = prod.customOfflinePrice && prod.customOfflinePrice > 0
-    ? parseFloat(String(prod.customOfflinePrice))
-    : recommendedPrice;
+
+  // Harga efektif: custom jika diisi user, jika tidak pakai rekomendasi
+  const effectiveOfflinePrice =
+    prod.customOfflinePrice && prod.customOfflinePrice > 0
+      ? parseFloat(String(prod.customOfflinePrice))
+      : recommendedPrice;
 
   const netOfflineMargin = effectiveOfflinePrice - hppMurni;
-  const marginRatio = effectiveOfflinePrice > 0 ? (netOfflineMargin / effectiveOfflinePrice) * 100 : 0; // Gross Margin % on Sales
-  const foodCostRatio = effectiveOfflinePrice > 0 ? (hppMurni / effectiveOfflinePrice) * 100 : 0; // Food Cost % on Sales
+  const marginRatio = effectiveOfflinePrice > 0 ? (netOfflineMargin / effectiveOfflinePrice) * 100 : 0;
+  const foodCostRatio = effectiveOfflinePrice > 0 ? (hppMurni / effectiveOfflinePrice) * 100 : 0;
 
   let marginStatus: MarginStatus = MARGIN_STATUS.CRITICAL;
   if (marginRatio >= MARGIN_STATUS.HEALTHY.min) marginStatus = MARGIN_STATUS.HEALTHY;
   else if (marginRatio >= MARGIN_STATUS.MODERATE.min) marginStatus = MARGIN_STATUS.MODERATE;
 
   return {
-    pricingMode,
-    targetFoodCostPercent,
     targetMarginPercent,
-    marginPercent,
     recommendedPriceRaw,
     recommendedPrice,
     effectiveOfflinePrice,
     netOfflineMargin,
     marginRatio,
     foodCostRatio,
-    marginStatus
+    marginStatus,
   };
 }
 
-/* Modul 2B: Simulasi Promo Toko (Offline) */
+/* ─── Modul 2B: Simulasi Promo Toko (Offline) ─── */
 export function calculateOfflinePromo(basePrice: number, hppMurni: number, prod: Product): OfflinePromoData {
   const isOfflinePromoActive = !!prod.offlinePromoEnabled;
   const mode = prod.offlineDiscountMode || 'percent';
@@ -142,20 +136,15 @@ export function calculateOfflinePromo(basePrice: number, hppMurni: number, prod:
   const marginRatioAfterDiscount = priceAfterDiscount > 0 ? (netMarginAfterDiscount / priceAfterDiscount) * 100 : 0;
   const isLosing = isOfflinePromoActive && (netMarginAfterDiscount < 0);
 
-  /* Harga Coret (Markup Price Display)
-   * Harga yang harus dipajang di menu SEBELUM dicoret, agar setelah diskon konsumen
-   * mendapat harga_toko_dasar (Rumus Spec Tab 2: reverse dari persentase/nominal diskon)
-   */
-  let hargaFinalCoret = basePrice; // Default: tanpa promo = harga coret = harga dasar itu sendiri
+  /* Harga Coret: harga yang dipajang di menu SEBELUM dicoret */
+  let hargaFinalCoret = basePrice;
   if (isOfflinePromoActive) {
     if (mode === 'percent') {
       const discFrac = discountPercent / 100;
-      // Guard: hindari division-by-zero jika diskon 100%
       hargaFinalCoret = discFrac < 1
         ? Math.ceil((basePrice / (1 - discFrac)) / 100) * 100
         : basePrice;
     } else {
-      // Jenis NOMINAL: harga coret = harga dasar + tambahan nominal
       hargaFinalCoret = basePrice + discountNominal;
     }
   }
@@ -169,35 +158,31 @@ export function calculateOfflinePromo(basePrice: number, hppMurni: number, prod:
     netMarginAfterDiscount,
     marginRatioAfterDiscount,
     isLosing,
-    hargaFinalCoret
+    hargaFinalCoret,
   };
 }
 
-/* Modul 3: Harga Aplikasi Online (Reverse-Margin) */
+/* ─── Modul 3: Harga Aplikasi Online (Auto Reverse-Margin) ─── */
 export function calculateOnlinePrice(offlinePrice: number, prod: Product): OnlineData {
   const commPercent = parseFloat(String(prod.commissionPercent)) || 0;
   const commFrac = commPercent / 100;
   const fixedFee = parseFloat(String(prod.fixedFee)) || 0;
 
+  // Formula Reverse-Margin: (Harga Offline + Biaya Tetap) ÷ (1 - Komisi%)
   let recommendedOnlineRaw = 0;
   if (commFrac < 1) {
     recommendedOnlineRaw = (offlinePrice + fixedFee) / (1 - commFrac);
   }
+  // Bulatkan ke 500 terdekat yang ≥ raw price
   const recommendedOnline = Math.ceil(recommendedOnlineRaw / 500) * 500;
 
-  const naiveOnlinePrice = (offlinePrice * (1 + commFrac)) + fixedFee;
-  const naiveNetPayout = naiveOnlinePrice - (naiveOnlinePrice * commFrac) - fixedFee;
-  const naivePayoutLoss = Math.max(0, offlinePrice - naiveNetPayout);
-
-  const hasCustomPrice = !!(prod.customOnlinePrice && prod.customOnlinePrice > 0);
-  const effectiveOnlinePrice = hasCustomPrice
+  // Apakah user mengaktifkan override manual?
+  const isManualOverride = !!(prod.onlineManualOverrideEnabled && prod.customOnlinePrice && prod.customOnlinePrice > 0);
+  const effectiveOnlinePrice = isManualOverride
     ? parseFloat(String(prod.customOnlinePrice))
     : recommendedOnline;
 
-  /* Guard Clause Anti-Boncos (Spec Tab 3):
-   * Jika user memasukkan override manual yang lebih rendah dari rekomendasi
-   * reverse-margin sistem, aktifkan flag peringatan. */
-  const isUnderPricingRisk = hasCustomPrice && effectiveOnlinePrice < recommendedOnline;
+  const isUnderPricingRisk = isManualOverride && effectiveOnlinePrice < recommendedOnline;
 
   const commissionAmount = effectiveOnlinePrice * commFrac;
   const simulatedPayout = effectiveOnlinePrice - commissionAmount - fixedFee;
@@ -208,16 +193,14 @@ export function calculateOnlinePrice(offlinePrice: number, prod: Product): Onlin
     fixedFee,
     recommendedOnlineRaw,
     recommendedOnline,
-    naiveOnlinePrice,
-    naivePayoutLoss,
     effectiveOnlinePrice,
     commissionAmount,
     simulatedPayout,
-    isUnderPricingRisk
+    isUnderPricingRisk,
   };
 }
 
-/* Modul 4: Pusat Simulasi Diskon & Proteksi Promo Online */
+/* ─── Modul 4: Simulasi Diskon & Proteksi Promo Online ─── */
 export function calculatePromoSim(hppMurni: number, onlinePrice: number, offlinePrice: number, prod: Product): PromoData {
   const orderQty = Math.max(1, parseInt(String(prod.simOrderQty), 10) || 1);
   const orderSubtotal = orderQty * onlinePrice;
@@ -230,7 +213,9 @@ export function calculatePromoSim(hppMurni: number, onlinePrice: number, offline
   const isMinOrderMet = isPromoActive && (orderSubtotal >= minOrder);
   const rawDiscount = isPromoActive ? orderSubtotal * (promoPercent / 100) : 0;
   const isDiscountCapped = isMinOrderMet && (rawDiscount > maxDiscountCap) && (maxDiscountCap > 0);
-  const effectiveDiscount = isMinOrderMet ? (maxDiscountCap > 0 ? Math.min(rawDiscount, maxDiscountCap) : rawDiscount) : 0;
+  const effectiveDiscount = isMinOrderMet
+    ? (maxDiscountCap > 0 ? Math.min(rawDiscount, maxDiscountCap) : rawDiscount)
+    : 0;
   const customerPays = Math.max(0, orderSubtotal - effectiveDiscount);
 
   const commPercent = parseFloat(String(prod.commissionPercent)) || 0;
@@ -245,7 +230,7 @@ export function calculatePromoSim(hppMurni: number, onlinePrice: number, offline
   const netProfit = netPayout - totalHPPOrder;
   const isBoncos = netProfit < 0;
 
-
+  /* Auto-Markup Campaign Price: harga minimum agar Net Payout ≥ target */
   const targetPayout = orderQty * (offlinePrice > 0 ? offlinePrice : hppMurni * 1.5);
   let subtotalReq = 0;
 
@@ -258,7 +243,6 @@ export function calculatePromoSim(hppMurni: number, onlinePrice: number, offline
       subtotalReq = custPayReq / Math.max(0.01, 1 - discFrac);
     }
   } else {
-    // before_discount
     if (maxDiscountCap > 0) {
       subtotalReq = (targetPayout + fixedFee + maxDiscountCap) / Math.max(0.01, 1 - commFrac);
     } else {
@@ -275,7 +259,6 @@ export function calculatePromoSim(hppMurni: number, onlinePrice: number, offline
   const recommendedCampaignSubtotal = Math.ceil(subtotalReq / 500) * 500;
   const recommendedCampaignPrice = Math.ceil((recommendedCampaignSubtotal / orderQty) / 500) * 500;
 
-  /* Pesan Saran Kenaikan Harga (Anti-Boncos Guardrail) — dihitung setelah recommendedCampaignPrice tersedia */
   const saranKenaikanHarga = isBoncos
     ? `🚨 PERINGATAN: Harga online saat ini menyebabkan kerugian! Naikkan ke Harga Kampanye ${formatIDR(recommendedCampaignPrice)}/porsi agar tidak boncos.`
     : 'Harga jual sudah aman dan menguntungkan.';
@@ -302,6 +285,6 @@ export function calculatePromoSim(hppMurni: number, onlinePrice: number, offline
     isBoncos,
     saranKenaikanHarga,
     recommendedCampaignPrice,
-    recommendedCampaignSubtotal
+    recommendedCampaignSubtotal,
   };
 }

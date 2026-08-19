@@ -10,13 +10,14 @@ interface FlexibleInputProps {
   placeholder?: string;
   className?: string;
   allowDecimal?: boolean;
+  min?: number;
+  max?: number;
 }
 
-function formatIDRValue(val: number | undefined | null) {
+function formatIDRValue(val: number | undefined | null): string {
   if (val === undefined || val === null) return '';
   const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/\./g, '').replace(/,/g, '.'));
   if (isNaN(num) || num === 0) return '';
-
   if (Number.isInteger(num)) {
     return new Intl.NumberFormat('id-ID').format(num);
   }
@@ -30,7 +31,9 @@ export default function FlexibleInput({
   prefix,
   suffix,
   placeholder,
-  allowDecimal = false
+  allowDecimal = false,
+  min,
+  max,
 }: FlexibleInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [localVal, setLocalVal] = useState(() => formatIDRValue(value));
@@ -44,14 +47,16 @@ export default function FlexibleInput({
   const handleBlur = () => {
     setIsFocused(false);
     if (!localVal) {
-      onChange(0);
+      onChange(min ?? 0);
       setLocalVal('');
       return;
     }
     const cleanDigits = allowDecimal
       ? localVal.replace(/[^0-9,/.]/g, '').replace(/,/g, '.')
       : localVal.replace(/\D/g, '');
-    const parsed = parseFloat(cleanDigits) || 0;
+    let parsed = parseFloat(cleanDigits) || 0;
+    if (min !== undefined) parsed = Math.max(min, parsed);
+    if (max !== undefined) parsed = Math.min(max, parsed);
     onChange(parsed);
     setLocalVal(parsed === 0 ? '' : formatIDRValue(parsed));
   };
@@ -77,7 +82,6 @@ export default function FlexibleInput({
         onChange(0);
         return;
       }
-
       const numVal = parseInt(digitsOnly, 10);
       const formatted = new Intl.NumberFormat('id-ID').format(numVal);
       setLocalVal(formatted);
@@ -88,24 +92,24 @@ export default function FlexibleInput({
   return (
     <div className="relative w-full">
       {prefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-extrabold text-[#6B5541] pointer-events-none z-10">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#45464d] pointer-events-none z-10 select-none">
           {prefix}
         </span>
       )}
       <input
         type="text"
-        inputMode="numeric"
+        inputMode={allowDecimal ? 'decimal' : 'numeric'}
         value={localVal}
         onChange={handleChange}
         onFocus={() => setIsFocused(true)}
         onBlur={handleBlur}
         placeholder={placeholder || '0'}
-        className={`w-full bg-white border border-[#E2D9C8] rounded-xl text-xs font-bold text-[#2C1E16] focus:outline-none focus:border-[#3D2B1F] py-2 font-mono ${
+        className={`w-full bg-white border border-[#e0e3e5] rounded-xl text-xs font-bold text-[#191c1e] focus:outline-none focus:border-[#4648d4] focus:ring-1 focus:ring-[#4648d4]/20 py-2.5 font-mono transition-colors ${
           prefix ? 'pl-8' : 'pl-3'
         } ${suffix ? 'pr-8' : 'pr-3'} ${className}`}
       />
       {suffix && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6B5541] pointer-events-none">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#45464d] pointer-events-none select-none">
           {suffix}
         </span>
       )}

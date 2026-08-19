@@ -40,7 +40,7 @@ Nama Resep: ${prod.name}
   * Proporsi Kemasan: ${hppData.packPct.toFixed(1)}% (${fmt(hppData.totalPackagings)})
 
 - Strategi Harga Toko (Offline):
-  * Target Margin: ${prod.marginPercent}%
+  * Target Margin: ${prod.targetMarginPercent ?? 60}%
   * Harga Jual Offline: ${fmt(offlineData.effectiveOfflinePrice)} (Laba: ${fmt(offlineData.netOfflineMargin)} / porsi)
   * Status Margin: ${offlineData.marginStatus.label} (${offlineData.marginRatio.toFixed(1)}%)
 

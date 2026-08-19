@@ -82,7 +82,7 @@ export default function TabSummarize({ prod, onOpenAI }: TabSummarizeProps) {
             {offlineData.marginRatio.toFixed(1)}%
           </div>
           <div className="text-[11px] font-medium text-[#45464d]">
-            Target Food Cost: {offlineData.foodCostRatio.toFixed(1)}%
+            Food Cost Nyata: {offlineData.foodCostRatio.toFixed(1)}% (Target Margin: {prod.targetMarginPercent ?? 60}%)
           </div>
         </Card>
 

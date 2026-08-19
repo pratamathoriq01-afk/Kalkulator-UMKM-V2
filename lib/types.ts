@@ -29,8 +29,6 @@ export interface Packaging {
   hppPerPortion?: number;
 }
 
-export type PricingMode = 'food_cost' | 'gross_margin' | 'markup';
-
 export interface Product {
   id: number;
   dbId?: number;
@@ -38,10 +36,8 @@ export interface Product {
   mainMaterials: MainMaterial[];
   bopMaterials: BopMaterial[];
   packagings: Packaging[];
-  pricingMode?: PricingMode;
-  targetFoodCostPercent?: number;
-  targetMarginPercent?: number;
-  marginPercent: number; // legacy markup % or fallback
+  /** Target Gross Margin % — satu-satunya metode pricing (Harga Jual = HPP ÷ (1 - Margin%)) */
+  targetMarginPercent: number;
   customOfflinePrice: number | null;
   offlinePromoEnabled?: boolean;
   offlineDiscountMode?: 'percent' | 'nominal';
@@ -49,6 +45,8 @@ export interface Product {
   offlineDiscountNominal?: number;
   commissionPercent: number;
   fixedFee: number;
+  /** true = user mengaktifkan override manual harga online */
+  onlineManualOverrideEnabled?: boolean;
   customOnlinePrice: number | null;
   simOrderQty: number;
   promoEnabled: boolean;
@@ -69,7 +67,7 @@ export interface HPPData {
   mainPct: number;
   bopPct: number;
   packPct: number;
-  validationErrors: string[]; // Pesan validasi input (misal: kapasitas = 0)
+  validationErrors: string[];
 }
 
 export interface MarginStatus {
@@ -80,15 +78,12 @@ export interface MarginStatus {
 }
 
 export interface OfflineData {
-  pricingMode: PricingMode;
-  targetFoodCostPercent: number;
   targetMarginPercent: number;
-  marginPercent: number;
   recommendedPriceRaw: number;
   recommendedPrice: number;
   effectiveOfflinePrice: number;
   netOfflineMargin: number;
-  marginRatio: number; // Gross Margin % on sales
+  marginRatio: number;   // Gross Margin % on sales
   foodCostRatio: number; // Food Cost % on sales
   marginStatus: MarginStatus;
 }
@@ -102,7 +97,7 @@ export interface OfflinePromoData {
   netMarginAfterDiscount: number;
   marginRatioAfterDiscount: number;
   isLosing: boolean;
-  hargaFinalCoret: number; // Harga coret yang harus dipasang di menu (reverse dari diskon)
+  hargaFinalCoret: number;
 }
 
 export interface OnlineData {
@@ -111,12 +106,10 @@ export interface OnlineData {
   fixedFee: number;
   recommendedOnlineRaw: number;
   recommendedOnline: number;
-  naiveOnlinePrice: number;
-  naivePayoutLoss: number;
   effectiveOnlinePrice: number;
   commissionAmount: number;
   simulatedPayout: number;
-  isUnderPricingRisk: boolean; // True jika user override < rekomendasi reverse-margin
+  isUnderPricingRisk: boolean;
 }
 
 export interface PromoData {
@@ -133,13 +126,13 @@ export interface PromoData {
   customerPays: number;
   deductionMode: string;
   commissionBase: number;
-  commissionOnlyAmount: number; // Komisi platform saja (tanpa fixedFee) — untuk display baris terpisah di struk
+  commissionOnlyAmount: number;
   appCommissionTotal: number;
   netPayout: number;
   totalHPPOrder: number;
   netProfit: number;
   isBoncos: boolean;
-  saranKenaikanHarga: string; // Pesan saran nominal kenaikan harga minimum saat isBoncos
+  saranKenaikanHarga: string;
   recommendedCampaignPrice: number;
   recommendedCampaignSubtotal: number;
 }

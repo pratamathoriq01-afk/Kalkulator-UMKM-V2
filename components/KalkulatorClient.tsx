@@ -105,12 +105,13 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
       ...DEFAULT_PRESETS[0],
       id: nextId,
       name: `Resep Baru ${nextId}`,
-      pricingMode: 'food_cost',
-      targetFoodCostPercent: 35,
-      targetMarginPercent: 65,
+      targetMarginPercent: 60,
       mainMaterials: [{ id: 1, name: 'Bahan Utama', totalPrice: 0, portions: 8, unit: 'porsi' }],
       bopMaterials: [{ id: 1, name: 'Overhead', totalPrice: 0, capacity: 1000, capUnit: 'ml', usage: 250, usageUnit: 'ml', portions: 8 }],
       packagings: [{ id: 1, name: 'Kemasan', totalPrice: 0, itemsPerPack: 50, unit: 'pcs' }],
+      customOfflinePrice: null,
+      onlineManualOverrideEnabled: false,
+      customOnlinePrice: null,
     };
     const dbId = await syncToDb(newProd, 'create');
     const prodWithDbId = { ...newProd, dbId: dbId ?? undefined };

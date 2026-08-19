@@ -105,7 +105,7 @@ export default function RightSummary({ prod, onOpenAI }: RightSummaryProps) {
             <Store className="h-3 w-3 text-[#131b2e]" /> Harga Toko
           </div>
           <span className="text-base font-bold font-mono text-[#191c1e] block">{formatIDR(offlineData.effectiveOfflinePrice)}</span>
-          <Badge variant={offlineData.marginRatio >= 50 ? 'success' : 'warning'} className="text-[9px] px-2 py-0 font-semibold">
+          <Badge className={`text-[9px] px-2 py-0 font-semibold border ${offlineData.marginRatio >= 50 ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : offlineData.marginRatio >= 30 ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-red-100 text-red-700 border-red-300'}`}>
             Margin {offlineData.marginRatio.toFixed(0)}%
           </Badge>
         </Card>
@@ -127,7 +127,7 @@ export default function RightSummary({ prod, onOpenAI }: RightSummaryProps) {
             <span className="text-[10px] font-bold text-[#45464d] uppercase tracking-wider flex items-center gap-1">
               <Receipt className="h-3.5 w-3.5 text-[#131b2e]" /> Struk Simulasi App
             </span>
-            <Badge variant={promoData.isBoncos ? 'destructive' : 'success'} className="text-[9px] px-2 py-0 font-semibold">
+            <Badge className={`text-[9px] px-2 py-0 font-semibold border ${promoData.isBoncos ? 'bg-red-100 text-red-700 border-red-300' : 'bg-emerald-100 text-emerald-700 border-emerald-300'}`}>
               {promoData.isBoncos ? '🔴 RUGI PROMO' : '🟢 AMAN PROMO'}
             </Badge>
           </div>
