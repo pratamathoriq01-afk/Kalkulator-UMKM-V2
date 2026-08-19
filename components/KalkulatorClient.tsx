@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Drawer from '@/components/Drawer';
 import RightSummary from '@/components/RightSummary';
 import AIAssistantModal from '@/components/AIAssistantModal';
+import GuideModal from '@/components/GuideModal';
 import TabHPP from '@/components/tabs/TabHPP';
 import TabOffline from '@/components/tabs/TabOffline';
 import TabOnline from '@/components/tabs/TabOnline';
@@ -15,7 +16,7 @@ import { DEFAULT_PRESETS } from '@/lib/config';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Box, Store, Smartphone, Tag, FileText, Sparkles, Save } from 'lucide-react';
+import { Box, Store, Smartphone, Tag, FileText, Sparkles, Save, BookOpen } from 'lucide-react';
 
 type TabId = 'hpp' | 'offline' | 'online' | 'promo' | 'summarize';
 
@@ -39,6 +40,7 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
   const [activeTab, setActiveTab] = useState<TabId>('hpp');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [aiApiKey, setAiApiKey] = useState('');
   const [aiModel, setAiModel] = useState('gemini-2.5-flash');
   const [isSaving, setIsSaving] = useState(false);
@@ -151,13 +153,14 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
   if (!activeProd) return null;
 
   return (
-    <div className="min-h-screen bg-stone-50/70 text-stone-900 font-sans antialiased selection:bg-[#F0E6D2] selection:text-[#2C1E16]">
+    <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e] font-sans antialiased selection:bg-[#e1e0ff] selection:text-[#07006c]">
       <Header
         productName={activeProd.name}
         onUpdateProductName={handleUpdateProductName}
         onToggleDrawer={() => setIsDrawerOpen(true)}
         onAddProduct={handleAddProduct}
         onOpenAI={() => setIsAIOpen(true)}
+        onOpenGuide={() => setIsGuideOpen(true)}
       />
 
       {/* Drawer */}
@@ -185,6 +188,12 @@ export default function KalkulatorClient({ initialProducts }: KalkulatorClientPr
         model={aiModel}
         onUpdateApiKey={setAiApiKey}
         onUpdateModel={setAiModel}
+      />
+
+      {/* Guide Modal */}
+      <GuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
       />
 
       {/* Main Layout Container */}

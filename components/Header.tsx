@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Menu, Plus, Sparkles, Calculator, Landmark } from 'lucide-react';
+import { Menu, Plus, Sparkles, Calculator, Landmark, BookOpen } from 'lucide-react';
 
 interface HeaderProps {
   productName: string;
@@ -10,6 +10,7 @@ interface HeaderProps {
   onToggleDrawer: () => void;
   onAddProduct: () => void;
   onOpenAI: () => void;
+  onOpenGuide: () => void;
 }
 
 export default function Header({
@@ -18,6 +19,7 @@ export default function Header({
   onToggleDrawer,
   onAddProduct,
   onOpenAI,
+  onOpenGuide,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-[#e0e3e5] shadow-xs">
@@ -59,6 +61,14 @@ export default function Header({
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={onOpenGuide}
+            className="rounded-lg font-semibold border-[#e0e3e5] hover:bg-[#f2f4f6] text-[#191c1e] text-xs px-3 py-2"
+          >
+            <BookOpen className="h-3.5 w-3.5 mr-1.5 text-[#4648d4]" />
+            <span className="hidden sm:inline">Cara Pakai</span>
+          </Button>
           <Button
             variant="secondary"
             onClick={onOpenAI}
