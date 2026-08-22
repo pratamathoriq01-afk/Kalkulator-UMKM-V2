@@ -34,20 +34,36 @@ export function calculateHPP(prod: Product): HPPData {
 
   let totalBopMaterials = 0;
   const bopList = (prod.bopMaterials || []).map(item => {
-    const price = parseFloat(String(item.totalPrice)) || 0;
-    const capacity = parseFloat(String(item.capacity)) || 0;
-    const usage = parseFloat(String(item.usage)) || 0;
+    const mode = item.inputMode || 'detail';
     const portions = parseFloat(String(item.portions)) || 0;
-    if (capacity <= 0) {
-      validationErrors.push(`[BOP] "${item.name}": Kapasitas total pack harus > 0.`);
-    }
-    if (portions <= 0) {
-      validationErrors.push(`[BOP] "${item.name}": Hasil porsi harus > 0.`);
-    }
-    const safeCapacity = Math.max(0.001, capacity);
     const safePortion = Math.max(1, portions);
-    const recipeCost = (price / safeCapacity) * usage;
-    const hppPerPortion = recipeCost / safePortion;
+
+    let recipeCost = 0;
+    let hppPerPortion = 0;
+
+    if (mode === 'simple') {
+      // Mode simpel: user input langsung biaya resep
+      const directCost = parseFloat(String(item.directCost)) || 0;
+      recipeCost = directCost;
+      hppPerPortion = recipeCost / safePortion;
+    } else {
+      // Mode detail: hitung dari kapasitas & pemakaian
+      const price = parseFloat(String(item.totalPrice)) || 0;
+      const capacity = parseFloat(String(item.capacity)) || 0;
+      const usage = parseFloat(String(item.usage)) || 0;
+      if (capacity <= 0) {
+        validationErrors.push(`[BOP] "${item.name}": Kapasitas total beli harus > 0.`);
+      }
+      const safeCapacity = Math.max(0.001, capacity);
+      // Rumus: (Pakai per resep / Kapasitas total beli) × Harga beli
+      recipeCost = (usage / safeCapacity) * price;
+      hppPerPortion = recipeCost / safePortion;
+    }
+
+    if (portions <= 0) {
+      validationErrors.push(`[BOP] "${item.name}": Jumlah porsi per resep harus > 0.`);
+    }
+
     totalBopMaterials += hppPerPortion;
     return { ...item, recipeCost, hppPerPortion };
   });

@@ -10,14 +10,20 @@ export interface MainMaterial {
 export interface BopMaterial {
   id: number;
   name: string;
-  totalPrice: number;
-  capacity: number;
-  capUnit: string;
-  usage: number;
-  usageUnit: string;
-  portions: number;
-  recipeCost?: number;
-  hppPerPortion?: number;
+  /** 'simple' = input langsung biaya resep (Rp), 'detail' = input kapasitas & pemakaian */
+  inputMode?: 'simple' | 'detail';
+  // --- Mode Simple ---
+  directCost?: number;    // Biaya langsung per resep (Rp)
+  // --- Mode Detail ---
+  totalPrice: number;     // Harga beli 1 pack/tabung/botol
+  capacity: number;       // Kapasitas total yang dibeli (dalam satuan capUnit)
+  capUnit: string;        // Satuan kapasitas (gram, ml, liter, kg, pcs, ...)
+  usage: number;          // Pemakaian per resep (dalam satuan capUnit yang sama)
+  usageUnit: string;      // Satuan pakai (auto-sync dengan capUnit)
+  portions: number;       // Jumlah porsi yang dihasilkan 1 resep
+  // --- Computed ---
+  recipeCost?: number;    // Biaya total 1 resep
+  hppPerPortion?: number; // Biaya per porsi
 }
 
 export interface Packaging {

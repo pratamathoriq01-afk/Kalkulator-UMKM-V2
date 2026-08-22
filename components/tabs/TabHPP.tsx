@@ -250,10 +250,13 @@ export default function TabHPP({ prod, onUpdateProduct, onNavigateTab }: TabHPPP
                   B. Biaya Operasional Produksi (BOP Variabel)
                   <Tooltip>
                     <TooltipTrigger><Info className="h-3.5 w-3.5 text-[#4648d4]" /></TooltipTrigger>
-                    <TooltipContent className="text-xs max-w-xs">Gas, Listrik, Minyak Goreng, Air yang dipakai untuk memasak per resep. Isi kapasitas 1 pack & pemakaian per masak.</TooltipContent>
+                    <TooltipContent className="text-xs max-w-xs">
+                      Gas, Listrik, Minyak Goreng — bahan habis pakai saat memasak.
+                      Gunakan Mode Simpel jika sudah tahu estimasi biayanya, atau Mode Detail untuk menghitung dari kapasitas & pemakaian.
+                    </TooltipContent>
                   </Tooltip>
                 </CardTitle>
-                <CardDescription className="text-[11px] text-[#45464d]">Overhead dapur: Gas LPG, Listrik, Minyak Goreng, Bumbu Pelengkap</CardDescription>
+                <CardDescription className="text-[11px] text-[#45464d]">Gas LPG, Listrik, Minyak Goreng, Air, Bumbu Pelengkap</CardDescription>
               </div>
             </div>
             <Button onClick={addBop} size="sm" className="bg-[#131b2e] hover:bg-[#2d3133] text-white rounded-xl text-xs font-semibold gap-1.5">
@@ -261,77 +264,187 @@ export default function TabHPP({ prod, onUpdateProduct, onNavigateTab }: TabHPPP
               <span>Tambah Overhead</span>
             </Button>
           </CardHeader>
-          <CardContent className="p-5 sm:p-6 space-y-3">
-            {/* Table Header */}
-            <div className="hidden sm:grid sm:grid-cols-12 gap-2 text-[10px] font-bold text-[#45464d] uppercase pb-2 border-b border-[#e0e3e5]">
-              <div className="col-span-3">Nama Biaya BOP</div>
-              <div className="col-span-2">Harga Beli Total</div>
-              <div className="col-span-2">Kapasitas Beli</div>
-              <div className="col-span-2">Pakai/Resep</div>
-              <div className="col-span-1">Porsi Resep</div>
-              <div className="col-span-2 text-right">Modal / Porsi</div>
+          <CardContent className="p-5 sm:p-6 space-y-4">
+
+            {/* Mode explanation banner */}
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100 text-[11px] text-orange-800">
+              <Info className="h-4 w-4 flex-shrink-0 mt-0.5 text-orange-500" />
+              <div className="space-y-0.5 font-medium">
+                <p><strong>Mode Simpel:</strong> Langsung isi estimasi biaya bahan per resep (misal: gas terpakai ≈ Rp 3.000 per masak).</p>
+                <p><strong>Mode Detail:</strong> Isi harga beli, kapasitas total, dan berapa yang terpakai per resep — sistem otomatis hitung biayanya.</p>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              {/* ─── BUG FIX: Render dari hppData.bopList ─── */}
-              {hppData.bopList.map(b => (
-                <div key={b.id} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center p-3 sm:p-2 rounded-xl bg-[#f7f9fb] sm:bg-transparent border border-[#e0e3e5] sm:border-none">
-                  <div className="w-full sm:col-span-3">
-                    <label className="sm:hidden text-[10px] font-bold text-[#45464d] block mb-1">Nama Overhead</label>
-                    <input
-                      type="text"
-                      value={b.name}
-                      onChange={e => updateBopRow(b.id, 'name', e.target.value)}
-                      className={inputCls}
-                      placeholder="Gas LPG, Listrik..."
-                    />
-                  </div>
-                  <div className="w-full sm:col-span-2">
-                    <label className="sm:hidden text-[10px] font-bold text-[#45464d] block mb-1">Total Harga Beli</label>
-                    <FlexibleInput value={b.totalPrice} onChange={v => updateBopRow(b.id, 'totalPrice', v)} prefix="Rp" />
-                  </div>
-                  <div className="w-full sm:col-span-2">
-                    <label className="sm:hidden text-[10px] font-bold text-[#45464d] block mb-1">Kapasitas Beli Total</label>
-                    <div className="flex items-center gap-1">
-                      <FlexibleInput value={b.capacity} onChange={v => updateBopRow(b.id, 'capacity', Math.max(1, v))} min={1} />
-                      <select
-                        value={b.capUnit}
-                        onChange={e => updateBopRow(b.id, 'capUnit', e.target.value)}
-                        className="text-[11px] font-semibold border border-[#e0e3e5] rounded-lg px-1 py-2.5 bg-white text-[#191c1e] focus:outline-none focus:border-[#4648d4]"
-                      >
-                        {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                      </select>
+            <div className="space-y-3">
+              {hppData.bopList.map(b => {
+                const mode = b.inputMode || 'detail';
+                const isSimple = mode === 'simple';
+                return (
+                  <div key={b.id} className="rounded-2xl border border-[#e0e3e5] bg-[#fafbfc] overflow-hidden">
+                    {/* Row header: nama + mode toggle + delete */}
+                    <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#f0f2f4]">
+                      <div className="flex-1 min-w-0">
+                        <input
+                          type="text"
+                          value={b.name}
+                          onChange={e => updateBopRow(b.id, 'name', e.target.value)}
+                          className={`${inputCls} font-bold`}
+                          placeholder="Nama Biaya BOP (Gas LPG, Listrik, Minyak...)"
+                        />
+                      </div>
+
+                      {/* Mode toggle pill */}
+                      <div className="flex-shrink-0 flex items-center gap-0.5 bg-[#f2f4f6] rounded-xl p-1">
+                        <button
+                          onClick={() => updateBopRow(b.id, 'inputMode', 'simple')}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                            isSimple
+                              ? 'bg-[#131b2e] text-white shadow-sm'
+                              : 'text-[#45464d] hover:text-[#191c1e]'
+                          }`}
+                        >
+                          ⚡ Simpel
+                        </button>
+                        <button
+                          onClick={() => updateBopRow(b.id, 'inputMode', 'detail')}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                            !isSimple
+                              ? 'bg-[#131b2e] text-white shadow-sm'
+                              : 'text-[#45464d] hover:text-[#191c1e]'
+                          }`}
+                        >
+                          🔬 Detail
+                        </button>
+                      </div>
+
+                      {/* Per porsi badge */}
+                      <div className="flex-shrink-0 px-3 py-1.5 bg-orange-50 rounded-xl border border-orange-100 text-center min-w-[80px]">
+                        <span className="text-[9px] text-orange-500 font-semibold block uppercase">Per Porsi</span>
+                        <span className="font-mono font-bold text-orange-700 text-xs">{formatIDR(b.hppPerPortion)}</span>
+                      </div>
+
+                      {(prod.bopMaterials || []).length > 1 && (
+                        <button
+                          onClick={() => removeBop(b.id)}
+                          className="flex-shrink-0 text-[#76777d] hover:text-[#ba1a1a] p-1.5 hover:bg-[#ffdad6] rounded-lg transition-colors cursor-pointer"
+                          title="Hapus BOP"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Row body: input fields */}
+                    <div className="p-4">
+                      {isSimple ? (
+                        /* ─── MODE SIMPEL ─── */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-[#45464d] block">
+                              Biaya per Resep (Rp):
+                            </label>
+                            <FlexibleInput
+                              value={b.directCost ?? 0}
+                              onChange={v => updateBopRow(b.id, 'directCost', v)}
+                              prefix="Rp"
+                            />
+                            <p className="text-[10px] text-[#76777d]">
+                              Estimasi biaya bahan ini untuk 1 kali masak/resep.
+                              Contoh: Gas terpakai ≈ Rp 3.000
+                            </p>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-[#45464d] block">
+                              Porsi yang Dihasilkan per Resep:
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <FlexibleInput
+                                value={b.portions}
+                                onChange={v => updateBopRow(b.id, 'portions', Math.max(1, v))}
+                                min={1}
+                              />
+                              <span className="text-xs font-bold text-[#45464d] flex-shrink-0">porsi</span>
+                            </div>
+                            <p className="text-[10px] text-[#76777d]">
+                              Berapa porsi yang dimasak sekaligus dalam 1 resep?
+                            </p>
+                          </div>
+                          {/* Formula preview for simple mode */}
+                          <div className="sm:col-span-2 p-3 rounded-xl bg-orange-50/50 border border-orange-100 text-[11px] text-orange-800 font-mono">
+                            <span className="font-sans font-bold text-[10px] uppercase tracking-wider text-orange-500 block mb-1">Preview Kalkulasi:</span>
+                            {formatIDR(b.directCost ?? 0)} ÷ {b.portions} porsi = <strong>{formatIDR(b.hppPerPortion)}/porsi</strong>
+                          </div>
+                        </div>
+                      ) : (
+                        /* ─── MODE DETAIL ─── */
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-[#45464d] block">
+                                Harga Beli Total (Rp):
+                              </label>
+                              <FlexibleInput value={b.totalPrice} onChange={v => updateBopRow(b.id, 'totalPrice', v)} prefix="Rp" />
+                              <p className="text-[10px] text-[#76777d]">Harga beli 1 pack/tabung/botol/galon penuh</p>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-[#45464d] block">
+                                Kapasitas Total Beli:
+                              </label>
+                              <div className="flex items-center gap-1.5">
+                                <FlexibleInput value={b.capacity} onChange={v => updateBopRow(b.id, 'capacity', Math.max(1, v))} min={1} />
+                                <select
+                                  value={b.capUnit}
+                                  onChange={e => updateBopRow(b.id, 'capUnit', e.target.value)}
+                                  className="text-[11px] font-bold border border-[#e0e3e5] rounded-lg px-2 py-2.5 bg-white text-[#191c1e] focus:outline-none focus:border-[#4648d4]"
+                                >
+                                  {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                </select>
+                              </div>
+                              <p className="text-[10px] text-[#76777d]">
+                                Total isi yang kamu beli. <strong>Satuan harus sama</strong> dengan Pakai/Resep di bawah.
+                                <br />Contoh: 2 Liter = isi 2000 ml → pilih &quot;ml&quot;, isi 2000
+                              </p>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-[#45464d] block">
+                                Pakai per Resep (dalam {b.capUnit || 'satuan'}):
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <FlexibleInput value={b.usage} onChange={v => updateBopRow(b.id, 'usage', Math.max(0, v))} />
+                                <span className="text-xs font-bold text-[#45464d] flex-shrink-0 bg-orange-50 px-2 py-2 rounded-lg border border-orange-100">
+                                  {b.capUnit || 'satuan'}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-[#76777d]">
+                                Berapa {b.capUnit || 'satuan'} yang terpakai untuk memasak 1 resep?
+                              </p>
+                            </div>
+                          </div>
+                          <div className="sm:w-48">
+                            <label className="text-[11px] font-bold text-[#45464d] block mb-1.5">
+                              Porsi per Resep:
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <FlexibleInput value={b.portions} onChange={v => updateBopRow(b.id, 'portions', Math.max(1, v))} min={1} />
+                              <span className="text-xs font-bold text-[#45464d] flex-shrink-0">porsi</span>
+                            </div>
+                          </div>
+                          {/* Formula preview for detail mode */}
+                          <div className="p-3 rounded-xl bg-orange-50/50 border border-orange-100 text-[11px] text-orange-800 font-mono">
+                            <span className="font-sans font-bold text-[10px] uppercase tracking-wider text-orange-500 block mb-1">Preview Kalkulasi:</span>
+                            ({b.usage} {b.capUnit} ÷ {b.capacity} {b.capUnit}) × {formatIDR(b.totalPrice)} ÷ {b.portions} porsi
+                            {' '}= <strong>{formatIDR(b.hppPerPortion)}/porsi</strong>
+                            <br />
+                            <span className="font-sans text-orange-600 text-[10px]">
+                              = Biaya resep {formatIDR(b.recipeCost ?? 0)} ÷ {b.portions} porsi
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="w-full sm:col-span-2">
-                    <label className="sm:hidden text-[10px] font-bold text-[#45464d] block mb-1">Pemakaian Per Resep</label>
-                    <div className="flex items-center gap-1">
-                      <FlexibleInput value={b.usage} onChange={v => updateBopRow(b.id, 'usage', Math.max(0, v))} />
-                      <span className="text-[11px] text-[#45464d] font-bold flex-shrink-0">{b.usageUnit || b.capUnit}</span>
-                    </div>
-                  </div>
-                  <div className="w-full sm:col-span-1">
-                    <label className="sm:hidden text-[10px] font-bold text-[#45464d] block mb-1">Porsi Resep</label>
-                    <FlexibleInput value={b.portions} onChange={v => updateBopRow(b.id, 'portions', Math.max(1, v))} min={1} />
-                  </div>
-                  <div className="w-full sm:col-span-2 flex items-center justify-between sm:justify-end gap-2">
-                    {/* ✅ FIXED: b.hppPerPortion dari hppData.bopList */}
-                    <div className="px-3 py-1.5 bg-orange-50 rounded-lg border border-orange-100 text-center min-w-[80px]">
-                      <span className="text-[9px] text-orange-500 font-semibold block uppercase">Per Porsi</span>
-                      <span className="font-mono font-bold text-orange-700 text-xs">{formatIDR(b.hppPerPortion)}</span>
-                    </div>
-                    {(prod.bopMaterials || []).length > 1 && (
-                      <button
-                        onClick={() => removeBop(b.id)}
-                        className="text-[#76777d] hover:text-[#ba1a1a] p-1.5 hover:bg-[#ffdad6] rounded-lg transition-colors cursor-pointer"
-                        title="Hapus BOP"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Sub-total BOP */}
